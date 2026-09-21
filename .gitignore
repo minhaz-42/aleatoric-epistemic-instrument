@@ -1,0 +1,36 @@
+# secrets
+.env
+*.key
+.craftx_key
+# data and caches
+data/*
+!data/README.md
+cache/
+*.lmdb
+*.h5
+*.npy
+*.npz
+*.pt
+*.pth
+*.safetensors
+# experiment outputs (results are committed selectively)
+experiments/logs/*
+!experiments/logs/.gitkeep
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+# latex
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.synctex.gz
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.brf
+# os
+.DS_Store

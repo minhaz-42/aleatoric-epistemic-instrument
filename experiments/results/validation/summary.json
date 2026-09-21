@@ -1,0 +1,201 @@
+{
+  "_written": "2026-09-21T14:28:45+00:00",
+  "checks": [
+    {
+      "detail": {
+        "max_epistemic": 0.0,
+        "mean_aleatoric": 0.9916335265106668,
+        "mean_expected_nll": 0.9916335265106668,
+        "nll_equals_aleatoric": true
+      },
+      "expected": "max KL(P*||Q) = 0 exactly",
+      "id": "V1",
+      "measured": "max = 0.000e+00",
+      "name": "Bayes-optimal forecaster has zero epistemic uncertainty",
+      "passed": true
+    },
+    {
+      "detail": {
+        "log_K": 1.3862943611198906,
+        "max_deviation": 4.440892098500626e-16
+      },
+      "expected": "expected NLL = log 4 = 1.386294 exactly",
+      "id": "V2",
+      "measured": "max deviation = 4.441e-16",
+      "name": "Uniform forecaster scores log K on every scene",
+      "passed": true
+    },
+    {
+      "detail": {
+        "exact": 0.3838120454733769,
+        "measured": 0.3835950893121767,
+        "sem": 0.006430988421328252
+      },
+      "expected": "I(y; z_m) = 0.383812 nats (exact)",
+      "id": "V3",
+      "measured": "0.383595 +/- 0.019293 (3 sem)",
+      "name": "Marginal forecaster's excess loss equals I(y; z_m)",
+      "passed": true
+    },
+    {
+      "detail": {
+        "monotone": true,
+        "rungs": [
+          {
+            "exact": 0.0,
+            "forecaster": "bayes_optimal",
+            "keep": [
+              "heading",
+              "speed",
+              "signal",
+              "blocker"
+            ],
+            "matches_closed_form": true,
+            "measured": 0.0,
+            "sem": 0.0
+          },
+          {
+            "exact": 0.04831211626588497,
+            "forecaster": "partial[heading,speed,signal]",
+            "keep": [
+              "heading",
+              "speed",
+              "signal"
+            ],
+            "matches_closed_form": true,
+            "measured": 0.048594186931932015,
+            "sem": 0.0027479642252529863
+          },
+          {
+            "exact": 0.11533074565254174,
+            "forecaster": "partial[heading,speed]",
+            "keep": [
+              "heading",
+              "speed"
+            ],
+            "matches_closed_form": true,
+            "measured": 0.11318941140047026,
+            "sem": 0.003785276258570085
+          },
+          {
+            "exact": 0.1839021725239748,
+            "forecaster": "partial[heading]",
+            "keep": [
+              "heading"
+            ],
+            "matches_closed_form": true,
+            "measured": 0.18391551763618516,
+            "sem": 0.004758357900614485
+          },
+          {
+            "exact": 0.3838120454733768,
+            "forecaster": "marginal",
+            "keep": [],
+            "matches_closed_form": true,
+            "measured": 0.3835950893121767,
+            "sem": 0.006430988421328252
+          }
+        ]
+      },
+      "expected": "ladder non-decreasing; every rung within 3 sem of its enumerated value",
+      "id": "V4",
+      "measured": "monotone=True; 5/5 rungs match",
+      "name": "Expected epistemic error is monotone in the cues used, and matches closed form",
+      "passed": true
+    },
+    {
+      "detail": {
+        "sweep": {
+          "1": 1.2121585338903098,
+          "16": 1.0032915409359482,
+          "2": 1.1366297775811676,
+          "32": 0.9931510528414922,
+          "4": 1.0737765703316406,
+          "8": 1.0304553406781547
+        }
+      },
+      "expected": "every successive difference <= 0",
+      "id": "V5",
+      "measured": "max increase = -1.014e-02",
+      "name": "Aleatoric floor is non-increasing in prefix length",
+      "passed": true
+    },
+    {
+      "detail": {
+        "bald_collapses": true,
+        "bald_monotone": true,
+        "n_members": 12,
+        "sigma": 0.75,
+        "single_flat": true,
+        "table": [
+          {
+            "epistemic_hat": 0.11806943678823577,
+            "epistemic_true": 0.01514087141818984,
+            "ratio_hat_over_true": 7.798060859719757,
+            "rho": 0.0,
+            "single_member_kl": 0.1589276427510251
+          },
+          {
+            "epistemic_hat": 0.08906959404598337,
+            "epistemic_true": 0.04200672685657596,
+            "ratio_hat_over_true": 2.120365015586544,
+            "rho": 0.25,
+            "single_member_kl": 0.1556758618156937
+          },
+          {
+            "epistemic_hat": 0.060161662206726516,
+            "epistemic_true": 0.07276674947072354,
+            "ratio_hat_over_true": 0.8267740780551361,
+            "rho": 0.5,
+            "single_member_kl": 0.15262158600216508
+          },
+          {
+            "epistemic_hat": 0.030565137627775022,
+            "epistemic_true": 0.10682062723003012,
+            "ratio_hat_over_true": 0.28613516340767514,
+            "rho": 0.75,
+            "single_member_kl": 0.1494963471810117
+          },
+          {
+            "epistemic_hat": 0.012363905407324509,
+            "epistemic_true": 0.12896678580280388,
+            "ratio_hat_over_true": 0.09586891175398825,
+            "rho": 0.9,
+            "single_member_kl": 0.14728717000435224
+          },
+          {
+            "epistemic_hat": -8.44810332800705e-18,
+            "epistemic_true": 0.1445966506547956,
+            "ratio_hat_over_true": -5.842530438810594e-17,
+            "rho": 1.0,
+            "single_member_kl": 0.1445966506547956
+          }
+        ],
+        "true_monotone": true,
+        "true_rises": true
+      },
+      "expected": "single-member error flat; KL(P*||Qbar) rises monotonically; BALD falls monotonically to 0",
+      "id": "V6",
+      "measured": "single 0.1589->0.1446; true 0.0151->0.1446 (9.6x); BALD 0.1181->-8.45e-18",
+      "name": "As members correlate, the estimate and the true error move in opposite directions",
+      "passed": true
+    },
+    {
+      "detail": {
+        "offender": null,
+        "worst_violation": 0.0
+      },
+      "expected": "no policy achieves lower loss than the oracle at any budget",
+      "id": "V7",
+      "measured": "largest violation = 0.000e+00",
+      "name": "Oracle routing dominates every policy at every budget",
+      "passed": true
+    }
+  ],
+  "expected_aleatoric": 0.9919394667556236,
+  "n_checks": 7,
+  "n_passed": 7,
+  "n_scenes": 1200,
+  "seed": 20260921,
+  "world": "junction@tau=0.9"
+}
