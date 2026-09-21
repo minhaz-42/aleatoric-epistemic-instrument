@@ -116,7 +116,10 @@ def fig_confound():
             label="ensemble's true error  KL(P*||Q̄)")
     ax.plot(rho, [t["epistemic_hat"] for t in tab], color=BLUE, marker="o",
             label="ensemble's estimate  (BALD)")
-    for y, c, txt in ((tab[-1]["epistemic_true"], ORANGE, "rises 9.6×"),
+    # Computed from the data, never hardcoded: an earlier revision pinned "9.6x" into the label
+    # and it silently disagreed with the summary after the canonical run changed the scene count.
+    rise = tab[-1]["epistemic_true"] / max(tab[0]["epistemic_true"], 1e-12)
+    for y, c, txt in ((tab[-1]["epistemic_true"], ORANGE, f"rises {rise:.1f}×"),
                       (tab[-1]["epistemic_hat"], BLUE, "falls to 0")):
         ax.annotate(txt, (rho[-1], y), xytext=(-4, 6 if c == ORANGE else -14),
                     textcoords="offset points", fontsize=7.5, color=c, ha="right")

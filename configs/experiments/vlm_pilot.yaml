@@ -1,0 +1,29 @@
+# The VLM arm. NEVER RUN. Recorded so that what would be run is written down before it is.
+# See STATUS.md section 5 for the decision this is waiting on.
+name: vlm_pilot
+seed: 20260921
+
+model:
+  backend: anthropic
+  id: claude-opus-5
+  effort: low               # a short classification; the forecast wanted is an immediate read
+  max_tokens: 256
+  temperature: null         # REJECTED with a 400 on this model. See src/vlm/client.py.
+
+elicitation: verbalised     # verbalised | sampled
+n_votes: 8                  # sampled mode only
+n_members: 3
+n_scenes: 40
+n_frames: 8
+
+# Rough, and labelled as such wherever printed: ~1600 input and ~60 output tokens per call.
+estimated_calls: 120
+estimated_usd: 1.14
+
+open_models:
+  # An ensemble drawn from one family shares pretraining and is the correlated case by
+  # construction -- the regime V6 shows collapses the estimate. A cross-family ensemble is the
+  # only comparison that could show the estimator working, so the arm is not worth running
+  # without one. Gateway is configured through OPENAI_COMPAT_BASE_URL.
+  backend: openai_compat
+  ids: []

@@ -1,0 +1,33 @@
+# The default world. Every headline number uses these values, and they are held constant across
+# experiments so a change in a result is attributable to the forecaster or the protocol rather
+# than to the world. Cue weights are a property of the instrument, not a fitted result.
+name: junction
+seed: 20260921
+
+world:
+  tau: 0.90                 # the only knob on the irreducible floor; E[H(P*)] = 0.9919 nats
+  outcomes: [left, straight, right, stop]
+  cues:
+    # name      alphabet       prior              visibility  reveal_frames
+    - {name: heading, values: [-1, 0, 1], prior: [0.333333, 0.333333, 0.333333], visibility: 0.95, reveal: 1.0}
+    - {name: speed,   values: [-1, 0, 1], prior: [0.30, 0.40, 0.30],             visibility: 0.85, reveal: 2.5}
+    - {name: signal,  values: [-1, 0, 1], prior: [0.35, 0.30, 0.35],             visibility: 0.55, reveal: 6.0}
+    - {name: blocker, values: [-1, 0, 1], prior: [0.25, 0.50, 0.25],             visibility: 0.40, reveal: 8.0}
+
+prefix:
+  n_frames: 8
+  horizon: 12
+  fps: 8.0
+
+splits: {fit: 0.3, calib: 0.2, test: 0.5}
+
+sweeps:
+  tau: [0.35, 0.50, 0.70, 0.90, 1.30, 2.00, 3.50]
+  rho: [0.0, 0.25, 0.50, 0.75, 0.90, 1.00]
+  prefix: [1, 2, 4, 8, 16, 32]
+
+routing:
+  cheap_sigma: 1.20
+  expensive_sigma: 0.35
+  n_members: 12
+  budgets: 21               # linspace(0, 1, 21)

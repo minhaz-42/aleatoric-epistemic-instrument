@@ -147,8 +147,12 @@ def t8():
             if srt[0] - srt[1] < 1e-9:          # a genuine tie: no ranking to preserve
                 continue
             assert np.argmax(p) == np.argmax(q), f"T={T} moved the argmax"
-            assert (np.argsort(p) == np.argsort(q)).all() or \
-                   abs(kl(p, q)) >= 0, f"T={T} reordered the outcomes"
+            # Full order preservation, stated over the pairs that are actually ordered: for every
+            # i, j strictly separated under p, the same strict order must hold under q.
+            for i in range(len(p)):
+                for j in range(len(p)):
+                    if p[i] > p[j] + 1e-12:
+                        assert q[i] > q[j], f"T={T} reordered outcomes {i} and {j}"
             checked += 1
         assert checked > 100, f"T={T}: only {checked} scenes had an untied argmax"
 
