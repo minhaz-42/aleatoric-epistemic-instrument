@@ -78,7 +78,7 @@ routing dominates at every budget, violation 0.000e+00.
 
 **V6, the confound control.** At fixed noise scale, as ensemble members go from independent to
 identical: one member's error is flat (0.1569 → 0.1491), the deployed ensemble's **true** error
-rises **10.0×** (0.0148 → 0.1491), and the **estimate** falls to zero (0.1196 → +3.8e-19). The
+rises **10.0×** (0.0148 → 0.1491), and the **estimate** falls to zero (0.1196 → +3.7e-19). The
 estimate and the quantity it stands in for move in opposite directions and cross near ρ = 0.5.
 
 **The estimated aleatoric term is not a property of the world.** True 0.9897 for every forecaster;

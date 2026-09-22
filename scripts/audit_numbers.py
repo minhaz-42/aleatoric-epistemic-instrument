@@ -10,17 +10,69 @@ narrative, not just its digits.
 A documented number is a claim, and a claim that no longer reproduces is a defect. Run this after
 any change to a script, a seed, or a world, and before quoting anything.
 
+The hand-listed numbers below were not enough. They pinned the ENDPOINTS of the V6 table and not
+its interior, and a later re-quote shifted the interior rows by one while leaving the endpoints
+right -- so the audit passed on a table that had four wrong rows in it (defect D10). The fix is not
+a longer hand-list: a documented table is now PARSED out of the markdown and every cell in it is
+re-measured, so the audit covers what the document says rather than what someone remembered to copy
+into this file.
+
     python3 scripts/audit_numbers.py
 
 Exit code 0 if every value matches, 1 otherwise.
 """
 import collections
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.utils.io import RESULTS, read_summary
+from src.utils.io import RESULTS, ROOT, read_summary
+
+RESEARCH = os.path.join(ROOT, "research")
+
+
+def md_table(path: str, header_key: str) -> list:
+    """The rows of the first markdown table whose header contains `header_key`.
+
+    Returns a list of cell lists, with emphasis markers stripped. Raises if the table is not there,
+    because a missing table means the document was restructured and the audit is now checking
+    nothing -- which must fail loudly rather than silently pass.
+    """
+    lines = open(os.path.join(RESEARCH, path)).read().splitlines()
+    head = next((i for i, l in enumerate(lines) if l.startswith("|") and header_key in l), None)
+    if head is None:
+        raise AssertionError(f"{path}: no table header containing {header_key!r}")
+    rows = []
+    for line in lines[head + 2:]:
+        if not line.startswith("|"):
+            break
+        cells = [c.strip().replace("**", "").replace("`", "") for c in line.strip("|").split("|")]
+        rows.append(cells)
+    return rows
+
+
+def num(cell: str) -> float:
+    """A number as the documents write them: unicode minus, a leading +, a trailing % or x."""
+    t = (cell.replace("\u2212", "-").replace("\u00d7", "").replace("%", "")
+             .replace("+", "").replace(",", "").strip())
+    return float(t)
+
+
+def like(measured: float, doc: str):
+    """(measured, documented) rounded the way the document wrote it, so the comparison is fair.
+
+    Scientific notation is compared as a formatted string: a document that writes 3.7e-19 is
+    claiming one mantissa digit, and demanding more of it would be inventing precision.
+    """
+    d = doc.replace("\u2212", "-").replace("+", "").replace("%", "").strip()
+    if "e" in d.lower():
+        mant = d.lower().split("e")[0]
+        dp = len(mant.split(".")[1]) if "." in mant else 0
+        return (f"{measured:.{dp}e}", f"{float(d):.{dp}e}")
+    dp = len(d.split(".")[1]) if "." in d else 0
+    return (round(float(measured), dp), round(float(d), dp))
 
 
 def _mech(name):
@@ -68,6 +120,78 @@ def build():
         "routing bald tau=0.35": (rnd(tau[0.35]["corr_epistemic_bald"], 3), 0.294),
         "routing bald tau=3.5": (rnd(tau[3.5]["corr_epistemic_bald"], 3), -0.223),
     }
+
+    # ---- tables, parsed from the documents rather than copied into this file -------------
+    INSTR = "04_instrument.md"
+
+    def cells(header_key, path=INSTR):
+        return md_table(path, header_key)
+
+    # the floor by temperature, which is a single row of values under a tau header
+    tau_head = cells("| τ | 0.35 |")[0]
+    for col, t in enumerate((0.35, 0.50, 0.70, 0.90, 1.30, 2.00, 3.50)):
+        F[f"table: floor at tau={t}"] = like(tau[t]["expected_aleatoric"], tau_head[col + 1])
+
+    # V4's evidence ladder, exact and measured, rung by rung
+    rungs = [c for c in vj["checks"] if c["id"] == "V4"][0]["detail"]["rungs"]
+    for row, rung in zip(cells("| cues read |"), rungs):
+        F[f"table: V4 ladder {row[0]} exact"] = like(rung["exact"], row[1])
+        F[f"table: V4 ladder {row[0]} measured"] = like(rung["measured"], row[2])
+
+    # V6, every cell of it -- this is the table that drifted
+    for row, t in zip(cells("| ρ | one member"), v6j):
+        r = f"rho={t['rho']:.2f}"
+        F[f"table: V6 {r} single"] = like(t["single_member_kl"], row[1])
+        F[f"table: V6 {r} true"] = like(t["epistemic_true"], row[2])
+        F[f"table: V6 {r} bald"] = like(t["epistemic_hat"], row[3])
+
+    # the decomposition table, every forecaster and every column
+    dec_keys = {"bayes_optimal": "bayes_optimal", "tempered T=0.5": "tempered[T=0.5]",
+                "tempered T=2": "tempered[T=2]",
+                "partial[heading,speed]": "partial[heading,speed]",
+                "partial[heading]": "partial[heading]",
+                "logit_noise σ=0.75 ρ=0": "logit_noise[sigma=0.75,rho=0]",
+                "marginal": "marginal", "uniform": "uniform"}
+    for row in cells("| forecaster | alea"):
+        f = fc[dec_keys[row[0]]]
+        for col, key in ((1, "aleatoric_true"), (2, "aleatoric_hat"), (3, "epistemic_true"),
+                         (4, "epistemic_hat"), (5, "accuracy"), (6, "ece")):
+            F[f"table: decomposition {row[0]} {key}"] = like(f[key], row[col])
+
+    # the routing floor sweep
+    for row in cells("| τ | E[H(P*)] | epistemic (BALD) |"):
+        t = float(row[0])
+        F[f"table: routing tau={t} floor"] = like(tau[t]["expected_aleatoric"], row[1])
+        F[f"table: routing tau={t} bald"] = like(tau[t]["corr_epistemic_bald"], row[2])
+        F[f"table: routing tau={t} total"] = like(tau[t]["corr_total_uncertainty"], row[3])
+
+    # the mechanism map, both worlds, every cell
+    mech_rows = {"missing evidence": "missing_evidence", "injected noise": "injected_noise",
+                 "overconfidence (T=0.4)": "overconfidence",
+                 "underconfidence (T=2.5)": "underconfidence",
+                 "evidence ensemble (cue dropout)": "evidence_ensemble", "mixed": "mixed"}
+    for row in cells("| why the cheap model is worse |"):
+        mech = mech_rows[row[0]]
+        for col, (label, key) in enumerate((("total", "corr_total_uncertainty"),
+                                            ("bald", "corr_epistemic_bald"))):
+            lo, hi = [x.strip() for x in row[col + 1].split("→")] if "→" in row[col + 1] else (None, None)
+            if lo is None or lo == "n/a":
+                continue
+            F[f"table: mech junction {mech} {label} lo"] = like(Mj[mech][0.35][key], lo)
+            F[f"table: mech junction {mech} {label} hi"] = like(Mj[mech][3.5][key], hi)
+
+    # the prefix table: share, then the two correlations, for both worlds in one table
+    # the table lists junction's four lengths and then kitchen's, under two sub-headers that are
+    # not table rows, so position is what distinguishes the worlds
+    pre_rows = [r for r in cells("| prefix | share of prefix gain") if "→" in r[0]]
+    assert len(pre_rows) == 8, f"prefix table has {len(pre_rows)} data rows, expected 8"
+    for k, row in enumerate(pre_rows):
+        L = int(row[0].split("→")[0].strip())
+        P = PJ if k < 4 else PK          # the table lists junction's four rows, then kitchen's
+        w = "junction" if k < 4 else "kitchen"
+        F[f"table: prefix {w} L={L} share"] = like(100 * P[L]["aleatoric_share"], row[1])
+        F[f"table: prefix {w} L={L} model"] = like(P[L]["corr_total_model"], row[2])
+        F[f"table: prefix {w} L={L} prefix"] = like(P[L]["corr_total_prefix"], row[3])
 
     doc_mech = {
         "junction": {"missing_evidence": (0.158, 0.043), "injected_noise": (0.375, -0.613),

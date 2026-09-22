@@ -15,6 +15,7 @@ fix in those cases was to the *claim*, not to the code — and those are the one
 | D7 | minor | **FIXED** | `write_summary` crashed on `np.bool_`, losing a completed run's output. |
 | D8 | cosmetic | **FIXED** | Rendered agent travelled too little for speed to be legible, and the motion trail was near-invisible. |
 | D9 | major | **FIXED** | A new test asserted the irreducible floor falls monotonically with prefix length *scene by scene*. False — and it is the third instance of the same error class. |
+| D10 | major | **FIXED** | The V6 table's four interior rows in `04_instrument.md` were stale: a re-quote updated the endpoints and shifted the interior by one row. The audit passed because it pinned only the endpoints. |
 | E1 | external | **STANDING** | `temperature` is rejected with a 400 on current Anthropic models. Not a defect; a constraint that changes the VLM arm's design. |
 
 ---
@@ -184,6 +185,54 @@ enumerated closed form rather than against the sampled mean alone wherever one i
 
 **Pinned by** test D9, which asserts the mean version holds *and* that the pointwise version is
 violated.
+
+---
+
+## D10 — four stale rows inside an audited table (major, fixed)
+
+**Claimed.** Every number in the documentation had been re-measured against the current code. The
+audit printed 67/67 and the V6 table in `research/04_instrument.md` §4 was taken to be current.
+
+**Evidence it was wrong.** Generating the paper's tables from `experiments/results/` produced a V6
+table that disagreed with the documented one in the four interior rows:
+
+| ρ | documented | measured |
+|---|---|---|
+| 0.25 | 0.1561 / 0.0430 / 0.0903 | 0.1569 / 0.0432 / 0.0907 |
+| 0.50 | 0.1551 / 0.0750 / 0.0610 | 0.1558 / 0.0750 / 0.0614 |
+| 0.75 | 0.1539 / 0.1103 / 0.0310 | 0.1540 / 0.1102 / 0.0313 |
+| 0.90 | 0.1527 / 0.1331 / 0.0125 | 0.1521 / 0.1330 / 0.0127 |
+
+The ρ=1 BALD value was also written `+3.8e-19` against a measured `3.7470e-19`.
+
+**Why it happened, exactly.** The documented ρ=0.25 single-member value, 0.1561, is the *previous
+revision's ρ=0.00 value* — the git history has it at `7b84e1c:research/04_instrument.md`. When the
+table was re-quoted after a seed-stream change, the endpoints were updated from the new run and the
+interior rows were carried down by one position. The code was never wrong and the run was never
+irreproducible: re-running `validate_instrument.py` reproduces the summary on disk exactly.
+
+**Why the audit did not catch it.** `audit_numbers.py` held a hand-written list of documented
+values, and for V6 that list contained only the endpoints — `single lo/hi`, `true lo/hi`, `bald lo`,
+the rise factor and the overstatement. Every one of those was right. The interior of the table was
+never in the list, so the audit had nothing to say about it. A hand-written list of cells audits
+the cells someone remembered to add.
+
+**What closed it.** Two things, and the second matters more than the first.
+
+1. The four rows and the exponent were rewritten *from the summary file* by a script rather than by
+   hand, so the transcription step that caused the defect was not repeated.
+2. `audit_numbers.py` now **parses the tables out of the markdown** and re-measures every cell in
+   them: the floor-by-τ row, the V4 ladder, all of V6, the whole decomposition table, the routing
+   sweep, the mechanism map and the prefix table. Coverage went from 67 hand-listed numbers to
+   **207**, of which 140 are parsed from the documents. A table that is restructured so the parser
+   cannot find it raises rather than silently passing.
+
+**Verified to fail on purpose.** Perturbing one V6 cell to 0.0751 and one accuracy to 0.576 makes
+the audit report both and exit 1.
+
+**Standing rule.** A number that appears in a documented *table* must be covered by the parsing
+audit, not by the hand list. The hand list is for prose numbers only, and a claim in prose that
+cannot be expressed as a table cell is a claim worth stating as a table cell instead.
 
 ---
 
