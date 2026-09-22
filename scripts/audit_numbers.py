@@ -193,6 +193,56 @@ def build():
         F[f"table: prefix {w} L={L} model"] = like(P[L]["corr_total_model"], row[2])
         F[f"table: prefix {w} L={L} prefix"] = like(P[L]["corr_total_prefix"], row[3])
 
+    # the robustness table, whose rows are keyed by position: the LABELS are here, the VALUES
+    # are parsed, so a shifted or edited cell is caught the way D10's would have been
+    rob = {(r["family"], r["world"], r["setting"], r["quantity"]): r
+           for r in read_summary("robustness")["rows"]}
+    ROB_ROWS = [
+        (("confound", "junction", "rho 0 -> 1", "true_rise_factor"), 1.0),
+        (("confound", "kitchen", "rho 0 -> 1", "true_rise_factor"), 1.0),
+        (("mechanism", "junction", "evidence_ensemble@tau0.35", "corr_bald"), 1.0),
+        (("mechanism", "junction", "evidence_ensemble@tau3.5", "corr_bald"), 1.0),
+        (("mechanism", "kitchen", "evidence_ensemble@tau0.35", "corr_bald"), 1.0),
+        (("mechanism", "kitchen", "evidence_ensemble@tau3.5", "corr_bald"), 1.0),
+        (("mechanism", "junction", "overconfidence@tau3.5", "corr_total"), 1.0),
+        (("mechanism", "junction", "missing_evidence@tau3.5", "corr_total"), 1.0),
+        (("prefix", "junction", "L1->2", "aleatoric_share"), 100.0),
+        (("prefix", "kitchen", "L1->2", "aleatoric_share"), 100.0),
+        (("prefix", "junction", "L1->2", "corr_total_prefix"), 1.0),
+        (("prefix", "junction", "L2->4", "corr_total_model"), 1.0),
+    ]
+    rob_table = cells("| claim | mean | sd | min | max | sign |")
+    assert len(rob_table) == len(ROB_ROWS), \
+        f"robustness table has {len(rob_table)} rows, the audit knows {len(ROB_ROWS)}"
+    for row, (key, scale) in zip(rob_table, ROB_ROWS):
+        r = rob[key]
+        tag = f"table: robustness {key[1]} {key[2]} {key[3]}"
+        for col, stat in ((1, "mean"), (2, "sd"), (3, "min"), (4, "max")):
+            F[f"{tag} {stat}"] = like(scale * r[stat], row[col])
+        F[f"{tag} sign"] = (f"{int(round(r['sign_agreement'] * r['n']))}/{r['n']}", row[5])
+
+    RH = read_summary("robustness")["headline"]
+    F["robustness mechanism cells sign-stable"] = (RH["mechanism_cells_sign_stable"], 24)
+    F["robustness mechanism cells"] = (RH["mechanism_cells"], 24)
+    F["robustness |BALD| at rho=1"] = (f"{RH['bald_abs_hi_max']:.1e}", "4.2e-18")
+    F["robustness prefix share lo"] = (rnd(100 * RH["prefix_share_min"], 0), 92.0)
+    F["robustness prefix share hi"] = (rnd(100 * RH["prefix_share_max"], 0), 98.0)
+    F["robustness BALD ensemble lo"] = (rnd(RH["bald_ensemble_min_mean"], 3), 0.563)
+    F["robustness BALD ensemble hi"] = (rnd(RH["bald_ensemble_max_mean"], 3), 0.840)
+    F["robustness BALD ensemble max sd"] = (rnd(RH["bald_ensemble_max_sd"], 3), 0.012)
+    F["robustness rise lo"] = (rnd(RH["confound_rise_min"], 1), 9.8)
+    F["robustness rise hi"] = (rnd(RH["confound_rise_max"], 1), 10.6)
+    F["robustness prefix positive cells"] = (RH["prefix_positive_stable"], 8)
+    F["robustness prefix model-stable cells"] = (RH["prefix_model_stable"], 7)
+    # the two bootstrap intervals the prose quotes
+    ci = rob[("mechanism", "junction", "missing_evidence@tau0.35", "corr_total")]
+    F["robustness missing_evidence lo-floor CI lo"] = (rnd(ci["ci_lo"], 3), 0.112)
+    F["robustness missing_evidence lo-floor CI hi"] = (rnd(ci["ci_hi"], 3), 0.202)
+    F["robustness missing_evidence lo-floor seed mean"] = (rnd(ci["mean"], 3), 0.208)
+    ci = rob[("mechanism", "junction", "missing_evidence@tau3.5", "corr_total")]
+    F["robustness missing_evidence hi-floor CI lo"] = (rnd(ci["ci_lo"], 3), -0.001)
+    F["robustness missing_evidence hi-floor CI hi"] = (rnd(ci["ci_hi"], 3), 0.086)
+
     doc_mech = {
         "junction": {"missing_evidence": (0.158, 0.043), "injected_noise": (0.375, -0.613),
                      "overconfidence": (-0.443, -0.992), "underconfidence": (-0.307, -0.978),
@@ -222,7 +272,7 @@ def build():
 
 def main():
     needed = ["validation", "validation_kitchen", "decomposition", "routing",
-              "mechanisms", "mechanisms_kitchen", "prefix", "prefix_kitchen"]
+              "mechanisms", "mechanisms_kitchen", "prefix", "prefix_kitchen", "robustness"]
     missing = [n for n in needed if not os.path.exists(os.path.join(RESULTS, n, "summary.json"))]
     if missing:
         print("cannot audit: missing results for " + ", ".join(missing))

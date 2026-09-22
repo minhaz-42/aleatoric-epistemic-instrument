@@ -308,8 +308,10 @@ Every claim above is a claim about a sign, and a sign from one run is not yet a 
 all three families over \RobSeeds{} seeds --- re-drawing the scenes \emph{and} the forecasters'
 noise streams --- and separately bootstrapped the published run with \RobBoot{} resamples of the
 scenes, which keeps seed-to-seed variation apart from the precision of a single reported figure
-(Appendix~\ref{app:robustness}). \RobMechStable{} of \RobMechCells{} (world, mechanism, floor)
-cells keep their published sign at every seed. The rise in the ensemble's true error as
+(Appendix~\ref{app:robustness}) --- and for one cell the seed spread lies outside that run's
+bootstrap interval, which is the reason to report both rather than either.
+\RobMechStable{} of \RobMechCells{} (world, mechanism, floor) cells keep their published sign at
+every seed. The rise in the ensemble's true error as
 $\rho: 0 \to 1$ is $\RobRiseLo$--$\RobRiseHi\times$ across seeds and worlds. BALD on the well-posed
 ensemble averages $\RobBaldEnsLo$ to $\RobBaldEnsHi$ with a seed standard deviation of at most
 $\RobBaldEnsSd$ and a bootstrap interval of $\RobEnsHiCI$ at the high floor; the overconfidence

@@ -1,5 +1,19 @@
 # Research decision
 
+**Revision 2026-09-22. DECIDED: option 1. The write-up exists — `paper/main.pdf`.**
+
+The decision below was the project's only open item for a day. It has been taken: **option 1**, a
+short methods / negative-results note on what survived, which was also the recommendation. What
+that took, beyond writing, was the robustness arm every sign claim needed and did not have — 5
+seeds, a bootstrap of the published run, both worlds (`scripts/run_robustness.py`, §5 of
+`research/04_instrument.md`) — and it held: 24/24 mechanism cells keep their sign at every seed,
+with one prefix cell reported as not sign-stable because it is not. Option 2 (pivot onto the prefix
+result with a real anticipation dataset) is untouched and remains the natural continuation; §7 of
+this document still applies to it. The rest of this file is the argument as it stood, kept because
+the reasoning is the record.
+
+---
+
 **Revision 2026-09-21b. The literature gate has fired and the answer changed.**
 
 The previous revision recommended verifying the literature before anything else, and said the
@@ -41,7 +55,7 @@ paper alone.
 
 ## 3. The decision
 
-**Option 1 — a short methods/negative-results note on what survives.** Three things do:
+**Option 1 — a short methods/negative-results note on what survives. TAKEN 2026-09-22.** Three things do:
 the ρ-parameterised link from ensemble-member correlation to routing performance against a known
 truth (a regime both papers assume away — Peale et al. require multiple independent annotations,
 Young assumes independently seeded members); the mechanism map measured against an explicit
@@ -66,8 +80,8 @@ deliverable that prevented weeks of work on refuted claims.
 
 ## 4. Recommended sequence
 
-1. **Decide between options 1, 2 and 3.** This is a judgement about how much the surviving material
-   is worth, and it belongs to the user.
+1. ~~**Decide between options 1, 2 and 3.**~~ **Done: option 1**, 2026-09-22. The judgement belonged
+   to the user and was made by instruction to complete the project and the paper.
 3. If option 2: **add a second world** (§5) and run the prefix arm on it. One day. Every result
    currently comes from one world, and the prefix claim is the one that most needs to be shown to
    generalise.

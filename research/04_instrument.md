@@ -1,6 +1,6 @@
 # The instrument: specification and validation
 
-Revision 2026-09-21. Everything below is reproducible from `scripts/` with no arguments, CPU only,
+Revision 2026-09-22 (§5.5 added; §4's interior rows corrected — see defect D10). Everything below is reproducible from `scripts/` with no arguments, CPU only,
 in about 90 seconds total. No model, no network, no data files.
 
 ## 1. The world
@@ -257,6 +257,62 @@ classifier has no second decision to serve at all.
 
 Figure: `figures/fig5_prefix.png`. Table: `tables/prefix.csv`.
 
+### 5.5 Robustness: how much of the above is the seed
+
+`scripts/run_robustness.py`, ~7 min, CPU. Every result above is one run at one seed, and every
+headline is a claim about a **sign**. A sign from a single run is not yet a claim, so all three
+claim families were re-run across seeds, and the published run was separately bootstrapped.
+
+Two sources of variation, deliberately kept apart:
+
+- **seeds** (5, starting at the published one) re-draw the scenes **and** the forecasters' noise
+  streams. This is the replication, and it is the number to quote.
+- **bootstrap** (1000 resamples) resamples the *scenes of the published run only*, and answers the
+  narrower question of how precisely that one reported figure is pinned. Ensemble members are not
+  resampled: they are part of the forecaster, not a sample from a population.
+
+| claim | mean | sd | min | max | sign |
+|---|---|---|---|---|---|
+| rise in KL(P*‖Q̄) as ρ: 0→1, junction | 10.30 | 0.21 | 9.99 | 10.55 | 5/5 |
+| rise in KL(P*‖Q̄) as ρ: 0→1, kitchen | 9.86 | 0.08 | 9.76 | 9.94 | 5/5 |
+| BALD on the well-posed ensemble, τ=0.35, junction | +0.563 | 0.005 | +0.557 | +0.568 | 5/5 |
+| BALD on the well-posed ensemble, τ=3.50, junction | +0.652 | 0.012 | +0.638 | +0.663 | 5/5 |
+| BALD on the well-posed ensemble, τ=0.35, kitchen | +0.820 | 0.011 | +0.808 | +0.834 | 5/5 |
+| BALD on the well-posed ensemble, τ=3.50, kitchen | +0.840 | 0.007 | +0.831 | +0.849 | 5/5 |
+| overconfidence, τ=3.50, junction | −0.993 | 0.001 | −0.993 | −0.991 | 5/5 |
+| missing evidence, τ=3.50, junction | +0.025 | 0.019 | +0.009 | +0.046 | 5/5 |
+| aleatoric share of the prefix gain, 1→2, junction | 94.6 | 0.7 | 93.6 | 95.5 | 5/5 |
+| aleatoric share of the prefix gain, 1→2, kitchen | 97.0 | 1.1 | 95.9 | 98.5 | 5/5 |
+| corr(total, prefix decision), 1→2, junction | +0.145 | 0.008 | +0.134 | +0.156 | 5/5 |
+| corr(total, model decision), 2→4, junction | −0.014 | 0.020 | −0.046 | +0.001 | 2/5 |
+
+Every column is in the units of its row — percent for the shares, multiples for the rise factor,
+correlation units otherwise — and every cell is re-measured by `scripts/audit_numbers.py`, which
+parses this table out of this file. `sign` counts the seeds whose sign agrees with the published
+run's.
+
+Across all six mechanisms, both worlds and both floors, **24 of 24** cells keep their published
+sign at every seed. `|BALD|` at ρ=1 never exceeds **4.2e-18** in any run or world, which is
+floating-point zero rather than a small number.
+
+**The one cell that is not sign-stable, named rather than averaged away.** Junction's
+model-decision correlation at L=2→4 is published at **+0.001** and measures **−0.014 ± 0.020**
+across seeds, agreeing with the published sign in 2 of 5 runs. It is indistinguishable from zero,
+and that is how it is now reported. It is also exactly the cell the narrowed prefix claim in §5.4
+already excluded — the narrowing was made on the earlier evidence and the seed sweep agrees with it.
+
+**A bootstrap interval is not a replication, and one cell shows why.** For `missing_evidence` at
+τ=0.35 the published run's bootstrap interval is [+0.112, +0.202] while the seed mean is **+0.208** —
+outside it. Resampling the scenes of one run understates how much the number moves when the
+forecasters' noise is redrawn too, so the seed spread is the honest error bar and the bootstrap is
+a statement about one figure. Both are reported.
+
+**The benign mechanism's high-floor end is zero, not small.** `missing_evidence` at τ=3.50 has a
+bootstrap interval of [−0.001, +0.086] around a published +0.043. "Decays toward zero" is therefore
+the correct reading and "retains a little signal" is not, and the write-up says so.
+
+Table: `tables/robustness.csv`. Records: `experiments/results/robustness/`.
+
 ## 6. Generality: the same experiments in a second world
 
 Every result above comes from the `junction` world, which made generality the largest open risk once
@@ -363,10 +419,17 @@ python3 scripts/run_mechanisms.py                   # ~25 s
 python3 scripts/run_mechanisms.py --world kitchen   # ~40 s
 python3 scripts/run_prefix.py                       # ~15 s
 python3 scripts/run_prefix.py --world kitchen --tau 0.70   # ~25 s
+python3 scripts/run_robustness.py                   # ~7 min, 5 seeds x 2 worlds + bootstrap
 python3 scripts/render_examples.py                  # ~18 s
 python3 scripts/make_figures.py                     # ~1 s
-python3 scripts/audit_numbers.py                    # 67/67 documented numbers
+python3 scripts/audit_numbers.py                    # 207/207 documented numbers
+python3 scripts/make_paper_tables.py                # every number the paper quotes
+python3 scripts/audit_paper.py                      # the paper cannot drift either
 ```
+
+`audit_numbers.py` parses the tables out of these documents and re-measures every cell, rather than
+comparing against a hand-written list of values. That change was forced by defect D10, where a
+hand-written list passed a table with four wrong rows in it.
 
 Everything is seeded from one root (20260921) through `src/utils/seeding.py`, which derives each
 stream by hashing a label path. Adding an arm to an experiment therefore cannot change the draws of

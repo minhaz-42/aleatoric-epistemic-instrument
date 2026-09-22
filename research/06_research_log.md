@@ -143,3 +143,79 @@ junction prefix narrative above — the drift is what caught it.
 
 Final state: 23/23 tests, 7/7 validation checks in each of two worlds, five figures, seven result
 tables. The open item is no longer "what next" but "is what survived worth writing up".
+
+
+## 2026-09-22 — the decision taken, the seed sweep, and the paper
+
+**The section-4 decision was settled: option 1, write up what survived.** Instructed to complete
+the project and the paper. Nothing was re-litigated; the recommendation had been option 1 and the
+work went straight into what a reviewer would demand of it.
+
+**Refactored before adding, because the addition had to be a replication rather than a second
+experiment.** The mechanism registry moved to `src/evaluation/mechanisms.py` and the prefix arm's
+core to `src/evaluation/arms.py`, so the seed sweep runs *the same code* as the published run. The
+registry is now seed-parameterised: previously `--seed` re-drew the scenes but the forecasters'
+noise streams were pinned to a module constant, so a seed sweep would have varied half of what it
+needed to. Both published runs reproduce exactly after the move.
+
+**The seed sweep and the bootstrap, which is what every sign claim here was missing.**
+`scripts/run_robustness.py`, 5 seeds × 2 worlds × 3 claim families, plus 1000 bootstrap resamples
+of the published run. The two sources of variation are deliberately kept apart: seeds re-draw the
+scenes and the forecasters, the bootstrap resamples only the scenes of one run and answers the
+narrower question of how precisely that figure is pinned. Ensemble members are *not* resampled —
+they are part of the forecaster, not a sample from a population.
+
+Result: **24/24 (world, mechanism, floor) cells keep their published sign at every seed.** The ρ
+rise is 9.8–10.6×, BALD on the well-posed ensemble averages +0.563 to +0.840 with seed sd ≤ 0.012,
+and the prefix share is 92–98% over every seed, world and length. **One cell is not sign-stable**
+and is now reported as such rather than quietly: junction's model-decision correlation at L=2→4,
+published +0.001, is −0.014 ± 0.020 over seeds — indistinguishable from zero, which is exactly the
+cell the narrowed prefix claim already excluded. The bootstrap also showed the benign mechanism's
+high-floor correlation spanning zero ([−0.001, +0.086]), so "decays toward zero" is now stated as
+"no signal there" rather than "a little signal".
+
+**Defect D10, found by building the paper.** Generating the paper's tables from the summaries
+produced a V6 table that disagreed with the documented one in all four interior rows. The
+documented ρ=0.25 value turned out to be the *previous revision's ρ=0.00 value*: a re-quote had
+updated the endpoints and carried the interior down by one position. The code was never wrong and
+the run reproduces exactly. The audit had passed because its hand-written list of documented values
+contained, for V6, only the endpoints — every one of which was right.
+
+So the fix was not a longer list. `audit_numbers.py` now **parses the tables out of the markdown**
+and re-measures every cell: the floor-by-τ row, the V4 ladder, all of V6, the decomposition table,
+the routing sweep, the mechanism map and the prefix table. Coverage went 67 → **207** numbers, 140
+of them parsed rather than transcribed, and a restructured table raises instead of silently
+passing. Verified to fail on purpose.
+
+**The paper.** *Uncertainty-Aware Routing Needs an Ensemble You Do Not Have* — 9 pages, a 5-page
+body, references, four appendix sections. It leads with what it does *not* claim, because the
+inequality between disagreement and forecaster error, the cancellation and the failure of
+total-uncertainty routing are all prior work; what it claims is the ρ-parameterised regime both
+papers assume away, the mechanism map against a random baseline with the floor as a controlled
+variable, and the prefix lever.
+
+**Every reference was read from its own arXiv record before being cited**, which is the project's
+own rule applied at the point it matters. That corrected two entries the novelty analysis had
+recorded loosely: arXiv:2409.02628 is Kirsch, *(Implicit) Ensembles of Ensembles: Epistemic
+Uncertainty Collapse in Large Models*; arXiv:2403.14715 is Xia, Laurent, Franchi and Bouganis,
+*Towards Understanding Why Label Smoothing Degrades Selective Classification and How to Fix It*,
+ICLR 2025. Ahdritz et al. went from `[S]` to `[A]` with its identifier and venue. The two papers
+that did the refuting were re-verified: both abstracts match what §2 of the novelty analysis quotes.
+
+**The paper contains no typed numerals**, which is D10's lesson applied where it matters most: a
+stale number in a markdown file can be corrected in place, but a reader of a PDF cannot re-check
+anything. Every quantity is a macro generated from `experiments/results/`, every table body is a
+generated file, and `scripts/audit_paper.py` regenerates into a temporary directory, diffs, and
+then fails on any typed numeral that is not a declared experimental *setting*. Both halves are
+verified to fail on purpose.
+
+**Ruled out along the way.** Making the *research* documents' tables generated as well: the paper
+needed it because a PDF cannot be corrected, but generating the markdown would make the audit
+tautological — the document would no longer be an independent claim about the numbers. Parsing the
+markdown instead keeps the document as the claim and the summary as the evidence. Also ruled out:
+trimming the body to four pages, which would have cost §7 (the limitations), and a paper about a
+synthetic world without that section is not worth submitting.
+
+Final state: **23/23 tests, 7/7 checks in each of two worlds, 207/207 documented numbers, 5 seeds,
+a built paper, and no open defects.** The VLM arm remains hard-blocked and is the only thing left
+that new information could change.

@@ -1,6 +1,7 @@
 # Novelty analysis
 
-**Revision 2026-09-21b. The verification pass has now run, and it changed the answer.**
+**Revision 2026-09-22. The verification pass has run, it changed the answer, and every reference
+has since been re-read from its own arXiv record before entering the paper.**
 
 An earlier revision of this document opened by recording that no literature had been checked and
 that nothing could be written up until that changed. It has now been checked. Three of the
@@ -110,16 +111,20 @@ image classifier has no second decision to serve at all.
 
 ## 5. Bibliography
 
+Re-verified 2026-09-22, one record at a time, before any of it was allowed into `paper/refs.bib`.
+Two entries were **wrong in this table** and are corrected below; the citation keys in the paper
+carry the corrected forms.
+
 | ref | status | note |
 |---|---|---|
-| arXiv:2606.12646, Robin Young, *Epistemic Uncertainty Is Not the Reducible Kind*, 10 Jun 2026 | `[V]` abstract + HTML body read | refutes B. stat.ML, cross-listed cs.IT and cs.LG; **no venue listed** |
-| arXiv:2605.07805, Peale et al., *Flexible Routing via Uncertainty Decomposition* | `[V]` pp. 1–4 read from the PDF | refutes D and E; anticipates part of F |
-| arXiv:2605.06350, *Is Escalation Worth It? A Decision-Theoretic Characterization of LLM Cascades* | `[A]` | cost-quality frontier and shadow prices; does **not** touch the decomposition |
-| arXiv:2603.02719, *Calibration and Selective Prediction in Multimodal Clinical Condition Classification* | `[V]` targeted read | Fig 1b illustrates a miscalibrated selective curve below random, but **no** random baseline is measured and the floor is not varied |
-| arXiv:2409.02628, *Epistemic Uncertainty Collapse in Large Models* | `[A]` | collapse as **model complexity** rises, explained by *implicit ensembling*. A different cause from member correlation, and no routing. Wounds §3.1, does not kill it |
-| arXiv:2403.14715, *Why Label Smoothing Degrades Selective Classification* | `[V]` targeted read | LS degrades selective classification by exacerbating over/underconfidence. **No random baseline, no controlled aleatoric variation, no ablation separating miscalibration from evidence deficiency** |
-| Ahdritz et al. 2025, higher-order predictors | `[S]` | cited by Peale et al. as the decomposition's basis |
-| Farha et al., *Uncertainty-Aware Anticipation of Activities*, arXiv:1908.09540 | `[S]` | video anticipation under ambiguity; horizon not prefix |
+| arXiv:2606.12646, Robin Young, *Epistemic Uncertainty Is Not the Reducible Kind*, 10 Jun 2026 | `[V]` abstract + HTML body read; abstract re-read 09-22 and matches §2 verbatim | refutes B. stat.ML, cross-listed cs.IT and cs.LG; **no venue listed** |
+| arXiv:2605.07805, **Charlotte Peale, Siddartha Devic, Parikshit Gopalan, Udi Wieder, Aravind Gollakota**, *Flexible Routing via Uncertainty Decomposition*, 8 May 2026 | `[V]` pp. 1–4 read from the PDF; abstract re-read 09-22 | refutes D and E; anticipates part of F. cs.LG |
+| arXiv:2605.06350, **Dylan Bouchard**, *Is Escalation Worth It? A Decision-Theoretic Characterization of LLM Cascades*, 7 May 2026 | `[A]` abstract read 09-22 | cost-quality frontier, piecewise concavity and shadow prices; does **not** touch the decomposition. Also finds a pre-generation router beating the best cascade policy, for a structural-cost reason rather than a signal reason |
+| arXiv:2603.02719, **L. Julián Lechuga López, Farah E. Shamout, Tim G. J. Rudner**, *An Empirical Analysis of Calibration and Selective Prediction in Multimodal Clinical Condition Classification*, 3 Mar 2026 | `[V]` targeted read; abstract re-read 09-22 | selective prediction degrading under class-dependent miscalibration — "high uncertainty to correct predictions and low uncertainty to incorrect ones". **No random baseline is measured and the floor is not varied** |
+| arXiv:2409.02628, **Andreas Kirsch**, *(Implicit) Ensembles of Ensembles: Epistemic Uncertainty Collapse in Large Models*, 4 Sep 2024 | `[A]` record read 09-22. **This table previously gave neither the author nor the full title** | collapse as **model complexity** rises, explained by *implicit ensembling*. A different cause from member correlation, and no routing. Wounds §3.1, does not kill it |
+| arXiv:2403.14715, **Guoxuan Xia, Olivier Laurent, Gianni Franchi, Christos-Savvas Bouganis**, *Towards Understanding Why Label Smoothing Degrades Selective Classification and How to Fix It*, **ICLR 2025** | `[V]` targeted read; record read 09-22. **This table previously gave a shortened title and no venue** | LS suppresses the max logit more where the prediction is likely correct, degrading the uncertainty ranking. **No random baseline, no controlled aleatoric variation, no ablation separating miscalibration from evidence deficiency** |
+| arXiv:2412.18808, **Gustaf Ahdritz, Aravind Gollakota, Parikshit Gopalan, Charlotte Peale, Udi Wieder**, *Provable Uncertainty Decomposition via Higher-Order Calibration*, **ICLR 2025** | `[A]` record read 09-22, **upgraded from `[S]`** | the decomposition Peale et al. build on. Needs *k-snapshots* — k independent conditional labels per point — which is the assumption our ρ sweep is about not having. Four of its five authors are Peale et al.'s |
+| **Yazan Abu Farha, Juergen Gall**, *Uncertainty-Aware Anticipation of Activities*, arXiv:1908.09540, **ICCV 2019 workshop (HBU)** | `[A]` record read 09-22, **upgraded from `[S]`** | video anticipation under ambiguity by sampling future sequences; the axis is the prediction **horizon**, not the observation prefix |
 
 ## 6. The two flagged reads, now done
 
@@ -144,3 +149,19 @@ exactly what §3.2 does.
 now captured: Robin Young, submitted 10 June 2026, stat.ML with cross-lists to cs.IT and cs.LG, no
 venue listed. A single-author preprint with no venue is worth re-checking for a published version
 before citing, but it does not change any verdict.
+
+## 7. What the pre-paper re-verification changed (2026-09-22)
+
+Before writing the paper, every entry in §5 was re-read from its own arXiv record, because the
+project's rule — nothing marked `[S]` or `[U]` may enter a paper — has to be enforced at the point
+the citation is actually made rather than at the point it is planned.
+
+It found two defects in §5 itself, both of the kind that would have produced a wrong citation:
+arXiv:2409.02628 was listed with no author and a shortened title (it is Kirsch, *(Implicit)
+Ensembles of Ensembles*), and arXiv:2403.14715 was listed with a shortened title and no venue (it
+is Xia et al., ICLR 2025). Two `[S]` entries were upgraded to `[A]` with identifiers and venues so
+they could be cited at all, and one of them mattered more than expected: Ahdritz et al. require
+*k-snapshots*, k independent conditional labels per input, which is precisely the assumption §3.1
+is about not having. That sharpened the paper's positioning rather than changing any verdict.
+
+**No verdict in §1 moved.** The two refuting abstracts match what §2 quotes, checked word for word.
