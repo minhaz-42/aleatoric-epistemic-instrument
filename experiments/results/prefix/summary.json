@@ -1,5 +1,5 @@
 {
-  "_written": "2026-09-21T17:05:43+00:00",
+  "_written": "2026-09-22T13:26:34+00:00",
   "exact_floor_sweep": {
     "1": 1.2121585338903098,
     "16": 1.0032915409359482,
@@ -12,6 +12,7 @@
   "n_scenes": 3000,
   "rows": [
     {
+      "aleatoric_share": 0.9412975597755858,
       "base_L": 1,
       "corr_bald_model": -0.07129298881033208,
       "corr_bald_prefix": 0.06316010274227783,
@@ -25,6 +26,7 @@
       "mean_gain_prefix_aleatoric_part": 0.0748455653422255
     },
     {
+      "aleatoric_share": 0.9387051755184356,
       "base_L": 2,
       "corr_bald_model": 0.012854732539414725,
       "corr_bald_prefix": 0.07851237699204319,
@@ -38,6 +40,7 @@
       "mean_gain_prefix_aleatoric_part": 0.06390974336797187
     },
     {
+      "aleatoric_share": 0.9491574874489767,
       "base_L": 4,
       "corr_bald_model": 0.052361474706830516,
       "corr_bald_prefix": 0.04133613571657728,
@@ -51,6 +54,7 @@
       "mean_gain_prefix_aleatoric_part": 0.04250673672217307
     },
     {
+      "aleatoric_share": 0.9172395519913865,
       "base_L": 8,
       "corr_bald_model": 0.08474199474911052,
       "corr_bald_prefix": 0.053179440168973975,

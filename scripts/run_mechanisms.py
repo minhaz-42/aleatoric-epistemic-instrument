@@ -32,7 +32,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.baselines.predictors import CueDropout, LogitNoise, PartialEvidence, Tempered
+from src.evaluation.mechanisms import SEED, mechanisms
 from src.evaluation.protocol import score_pair
 from src.forecasting.scenarios import junction_world, kitchen_world
 from src.routing.curves import DEFAULT_BUDGETS, efficiency, gain_correlation, skill
@@ -41,40 +41,7 @@ from src.temporal.splits import split_scenes
 from src.utils.io import write_records, write_summary
 from src.utils.seeding import rng
 
-SEED = 20260921
 TAUS = (0.35, 0.70, 1.30, 2.00, 3.50)
-
-def _by_visibility(w):
-    """Cue names most-visible first, so the mechanisms are defined structurally rather than by the
-    junction world's vocabulary and the same experiment runs unchanged in any world."""
-    return [c.name for c in sorted(w.spec.cues, key=lambda c: -c.visibility)]
-
-
-MECHANISMS = {
-    "missing_evidence": (
-        "cheap sees only the most-visible cue; expensive also sees the next two",
-        lambda w: (PartialEvidence(w, tuple(_by_visibility(w)[:1])),
-                   PartialEvidence(w, tuple(_by_visibility(w)[:3])))),
-    "injected_noise": (
-        "both read every visible cue, cheap with 3.4x the logit noise",
-        lambda w: (LogitNoise(w, 1.20, rho=0.3, seed=SEED),
-                   LogitNoise(w, 0.35, rho=0.3, seed=SEED + 1))),
-    "overconfidence": (
-        "cheap has the right ranking at T=0.4; expensive is Bayes-optimal",
-        lambda w: (Tempered(w, 0.4), Tempered(w, 1.0))),
-    "underconfidence": (
-        "cheap has the right ranking at T=2.5; expensive is Bayes-optimal",
-        lambda w: (Tempered(w, 2.5), Tempered(w, 1.0))),
-    "evidence_ensemble": (
-        "cheap is an ensemble that drops cues at random; expensive keeps them all. "
-        "The fair test of the mutual-information estimator: members disagree because evidence is "
-        "missing, and their errors are independent by construction",
-        lambda w: (CueDropout(w, keep_p=0.5), PartialEvidence(w, tuple(c.name for c in w.spec.cues)))),
-    "mixed": (
-        "cheap is noisy; expensive instead has more evidence",
-        lambda w: (LogitNoise(w, 1.00, rho=0.3, seed=SEED + 2),
-                   PartialEvidence(w, tuple(_by_visibility(w)[:3])))),
-}
 
 
 def main():
@@ -85,6 +52,7 @@ def main():
     ap.add_argument("--world", default="junction", choices=["junction", "kitchen"])
     args = ap.parse_args()
     make_world = {"junction": junction_world, "kitchen": kitchen_world}[args.world]
+    MECHANISMS = mechanisms(args.seed)
 
     records, summary = [], []
     print("corr(score, true gain) for each routing policy, by why the cheap forecaster is worse.")
@@ -131,8 +99,8 @@ def main():
     tag = "mechanisms" if args.world == "junction" else f"mechanisms_{args.world}"
     write_records(tag, pd.DataFrame(records))
     write_summary(tag, {"world": args.world, "seed": args.seed, "taus": list(TAUS),
-                                 "mechanisms": {k: v[0] for k, v in MECHANISMS.items()},
-                                 "rows": summary})
+                        "mechanisms": {k: v[0] for k, v in MECHANISMS.items()},
+                        "rows": summary})
     return 0
 
 
