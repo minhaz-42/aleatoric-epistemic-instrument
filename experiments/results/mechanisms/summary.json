@@ -1,5 +1,5 @@
 {
-  "_written": "2026-09-22T13:24:29+00:00",
+  "_written": "2026-09-22T14:09:43+00:00",
   "mechanisms": {
     "evidence_ensemble": "cheap is an ensemble that drops cues at random; expensive keeps them all. The fair test of the mutual-information estimator: members disagree because evidence is missing, and their errors are independent by construction",
     "injected_noise": "both read every visible cue, cheap with 3.4x the logit noise",
