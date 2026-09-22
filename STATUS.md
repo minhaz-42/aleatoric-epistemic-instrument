@@ -47,7 +47,7 @@ dataset — is untouched and remains the natural continuation if the project run
 
 | item | file | state |
 |---|---|---|
-| The paper | `paper/main.pdf` | built, 9 pages, audited |
+| The paper | `paper/main.pdf` | built, 10 pages (5-page body), audited |
 | Problem formulation, the decomposition, scope | `research/01_problem_and_position.md` | final |
 | Novelty claims A–G and their verdicts, plus bibliography | `research/02_novelty_analysis.md` | final, revision 2026-09-22, **3 claims refuted**, every reference re-read from its own record |
 | The decision, and the fact that it was taken | `research/03_research_decision.md` | **decided: option 1** |

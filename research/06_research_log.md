@@ -187,8 +187,8 @@ the routing sweep, the mechanism map and the prefix table. Coverage went 67 → 
 of them parsed rather than transcribed, and a restructured table raises instead of silently
 passing. Verified to fail on purpose.
 
-**The paper.** *Uncertainty-Aware Routing Needs an Ensemble You Do Not Have* — 9 pages, a 5-page
-body, references, four appendix sections. It leads with what it does *not* claim, because the
+**The paper.** *Uncertainty-Aware Routing Needs an Ensemble You Do Not Have* — 10 pages, a 5-page
+body, two pages of references, six appendix sections. It leads with what it does *not* claim, because the
 inequality between disagreement and forecaster error, the cancellation and the failure of
 total-uncertainty routing are all prior work; what it claims is the ρ-parameterised regime both
 papers assume away, the mechanism map against a random baseline with the floor as a controlled
