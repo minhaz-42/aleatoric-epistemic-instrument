@@ -55,6 +55,25 @@ SKIP_LINE = re.compile(r"^\s*%|^\s*\\(input|include|usepackage|documentclass|bib
                        r"|bibliographystyle|newcommand|renewcommand|label|ref|cite)")
 NUMBER = re.compile(r"(?<![A-Za-z0-9_])(\d+(?:\.\d+)?)")
 
+# Numbers about the page rather than about the world: column widths, spans, rule ranges, image
+# scales. These are stripped from a line before it is checked, rather than the whole line being
+# skipped, because the same line often carries a heading that DOES make a claim. A caption is never
+# stripped or skipped: a caption makes claims like any other prose.
+LAYOUT = [
+    re.compile(r"\\cmidrule(\([lr]+\))?\{[^}]*\}"),
+    re.compile(r"\\multicolumn\{[^}]*\}\{[^}]*\}"),
+    re.compile(r"\\includegraphics(\[[^]]*\])?"),
+    re.compile(r"\\begin\{tabular\}\{[^}]*\}[^}]*\}?"),
+    re.compile(r"[pmb]\{[0-9.]*\\(text|line|column)width\}"),
+    re.compile(r"\\(setlength|vspace|hspace|itemsep|parskip|hskip|vskip)\*?\{?[^}\s]*\}?"),
+]
+
+
+def strip_layout(text: str) -> str:
+    for pat in LAYOUT:
+        text = pat.sub(" ", text)
+    return text
+
 
 def regenerate_and_compare() -> list:
     """Regenerate into a temp dir; report every generated file that differs or is missing."""
@@ -90,7 +109,7 @@ def typed_numerals(path: str) -> list:
                 continue
             if in_verbatim or SKIP_LINE.match(line):
                 continue
-            text = line.split("%")[0]
+            text = strip_layout(line.split("%")[0])
             for tok in NUMBER.findall(text):
                 dec = len(tok.split(".")[1]) if "." in tok else 0
                 if dec >= MEASURED_DECIMALS or tok not in SETTINGS:

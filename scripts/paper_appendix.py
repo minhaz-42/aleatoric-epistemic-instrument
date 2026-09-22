@@ -58,20 +58,20 @@ being pessimistic about, since a policy which cannot separate scenes should not 
 """
 
 REPRO_TEMPLATE = r"""\begin{verbatim}
-python3 tests/test_instrument.py                      # %(NumTests)s/%(NumTests)s identities
-python3 scripts/validate_instrument.py                # %(NumChecks)s/%(NumChecks)s checks, junction
+python3 tests/test_instrument.py             # %(NumTests)s/%(NumTests)s identities
+python3 scripts/validate_instrument.py       # %(NumChecks)s/%(NumChecks)s checks
 python3 scripts/validate_instrument.py --world kitchen --tau 0.70
-python3 scripts/run_decomposition.py                  # Table 5
-python3 scripts/run_routing.py                        # Appendix D
-python3 scripts/run_mechanisms.py                     # Table 2
-python3 scripts/run_mechanisms.py --world kitchen     # Table 6
-python3 scripts/run_prefix.py                         # Table 3
+python3 scripts/run_decomposition.py         # Table 5
+python3 scripts/run_routing.py               # Appendix D
+python3 scripts/run_mechanisms.py            # Table 2
+python3 scripts/run_mechanisms.py --world kitchen        # Table 6
+python3 scripts/run_prefix.py                # Table 3
 python3 scripts/run_prefix.py --world kitchen --tau 0.70
-python3 scripts/run_robustness.py                     # Table 7
+python3 scripts/run_robustness.py            # Table 7
 python3 scripts/make_figures.py
-python3 scripts/audit_numbers.py                      # re-measures every documented number
-python3 scripts/make_paper_tables.py                  # regenerates every number in this paper
-python3 scripts/audit_paper.py                        # fails on drift or a typed numeral
+python3 scripts/audit_numbers.py             # re-measures the docs
+python3 scripts/make_paper_tables.py         # this paper's numbers
+python3 scripts/audit_paper.py               # fails on any drift
 \end{verbatim}
 
 Results land in \texttt{experiments/results/<name>/} as a \texttt{records.csv} (one row per scored

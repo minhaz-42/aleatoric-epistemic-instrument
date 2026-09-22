@@ -33,11 +33,11 @@ def run(cmd, cwd, quiet=True):
     return r.returncode
 
 
-def page_count(pdf: str) -> int:
-    with open(pdf, "rb") as fh:
-        data = fh.read()
-    counts = [int(m) for m in re.findall(rb"/Count\s+(\d+)", data)]
-    return max(counts) if counts else 0
+def page_count(log: str) -> int:
+    """From the LaTeX log rather than the PDF: modern PDFs put the page tree in a compressed
+    object stream, where a byte scan for /Count finds nothing."""
+    m = re.search(r"Output written on \S+ \((\d+) pages?", log)
+    return int(m.group(1)) if m else 0
 
 
 def main():
@@ -55,13 +55,14 @@ def main():
     if run(["latexmk", "-pdf", "-interaction=nonstopmode", "-halt-on-error", "main.tex"], PAPER):
         return 1
 
-    pdf = os.path.join(PAPER, "main.pdf")
-    pages = page_count(pdf)
-    print(f"built paper/main.pdf, {pages} pages")
-
-    # the body length is what a page limit constrains, so report it separately
     with open(os.path.join(PAPER, "main.log")) as fh:
         log = fh.read()
+    print(f"built paper/main.pdf, {page_count(log)} pages")
+
+    # the body length is what a page limit constrains; the appendix starts after \appendix
+    m = re.search(r"\[(\d+)\] \(\./generated/app_worlds", log)
+    if m:
+        print(f"  body ends on page {m.group(1)} (the appendix starts there)")
     for warn in sorted(set(re.findall(r"(LaTeX Warning: Reference [^\n]+)", log))):
         print("  " + warn)
     for warn in sorted(set(re.findall(r"(LaTeX Warning: Citation [^\n]+)", log))):
