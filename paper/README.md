@@ -1,7 +1,8 @@
 # paper/
 
-`main.pdf` — *Uncertainty-Aware Routing Needs an Ensemble You Do Not Have.* Nine pages: a five-page
-body, references, and a four-section appendix.
+`main.pdf` — *Uncertainty-Aware Routing Needs an Ensemble You Do Not Have.* Ten pages: a five-page
+body, two pages of references, and a six-section appendix. The body is what a page limit
+constrains, and `scripts/build_paper.py` reports where it ends on every build.
 
 An earlier version of this file said the directory should stay empty of prose, because nothing
 could be written up while every prior-art statement in the project was marked `[U]` (unverified

@@ -29,8 +29,8 @@ called**; that arm is hard-blocked, with no credential on this machine.
 
 Two things, and neither is blocked on a decision.
 
-1. **Submit.** `paper/main.pdf` is a 9-page workshop paper: a 5-page body, references, four
-   appendix sections. One `\usepackage` line swaps `neuripsish.sty` for the venue's own style file,
+1. **Submit.** `paper/main.pdf` is a 10-page workshop paper: a 5-page body, two pages of
+   references, and six appendix sections. One `\usepackage` line swaps `neuripsish.sty` for the venue's own style file,
    and `\author{Anonymous submission}` is the anonymous form. `paper/README.md` states the venue
    assumption explicitly so it can be corrected, and says what to move for a strict 4-page limit.
 2. **The VLM pilot, if a credential ever appears.** Written, wired, costed at ~$1.14, refuses to

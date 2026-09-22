@@ -53,8 +53,11 @@ about real video.
 
 \section{Introduction}
 
-A forecaster sees a prefix of video and reports a distribution over what happens next. For a
-forecast $Q$ on a scene whose true conditional is $\Pstar$, the expected log loss splits exactly:
+A forecaster sees a prefix of video and reports a distribution over what happens next. When the
+answer is uncertain, a deployed system can spend to improve it --- escalate to a larger model, whose
+cost-quality frontier is by now well characterised \citep{bouchard2026escalation} --- but only if
+the uncertainty is the kind that spending removes. For a forecast $Q$ on a scene whose true
+conditional is $\Pstar$, the expected log loss splits exactly:
 %
 \begin{equation}
 \mathbb{E}_{y\sim \Pstar}\!\left[-\log Q(y)\right]
@@ -78,7 +81,8 @@ confidence-based routing ranks by \emph{contains} that term, and is often domina
 
 \paragraph{What is already established, and is not claimed here.}
 \citet{young2026epistemic} proves that the standard definition of epistemic uncertainty and its
-standard mutual-information measure \citep{houlsby2011bayesian, depeweg2018decomposition} are
+standard mutual-information measure \citep{houlsby2011bayesian, depeweg2018decomposition},
+estimated in practice from an ensemble \citep{lakshminarayanan2017simple}, are
 extensionally inconsistent, and that ensemble disagreement ``collapses to zero beneath a positive
 truth under consistent training''. \citet{peale2026flexible} state the cancellation in
 \eqref{eq:gain} in their introduction, build a router that decomposes total uncertainty via
