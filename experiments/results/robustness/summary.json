@@ -1,6 +1,7 @@
 {
-  "_written": "2026-09-22T13:34:00+00:00",
+  "_written": "2026-09-22T13:45:48+00:00",
   "headline": {
+    "bald_abs_hi_max": 4.180683577104105e-18,
     "bald_ensemble_max_mean": 0.8403220323756727,
     "bald_ensemble_max_sd": 0.012272928106646347,
     "bald_ensemble_min_mean": 0.5626982910518529,
@@ -10,6 +11,16 @@
     "mechanism_cells_sign_stable": 24,
     "prefix_cells": 8,
     "prefix_model_stable": 7,
+    "prefix_model_unstable": [
+      {
+        "mean": -0.013783636109292901,
+        "published": 0.0006435911826212425,
+        "sd": 0.019894168580051202,
+        "setting": "L2->4",
+        "sign_agreement": 0.4,
+        "world": "junction"
+      }
+    ],
     "prefix_positive_stable": 8,
     "prefix_share_max": 0.9847365537863112,
     "prefix_share_min": 0.9172395519913865
@@ -33,13 +44,13 @@
     {
       "family": "confound",
       "max": 3.521488656232918e-18,
-      "mean": 1.3627987627273796e-18,
-      "min": -1.6549261960818739e-18,
+      "mean": 2.024769241160129e-18,
+      "min": 6.175615574477433e-19,
       "n": 5,
-      "quantity": "bald_hi",
-      "sd": 1.975523932949579e-18,
+      "quantity": "bald_abs_hi",
+      "sd": 1.0486216163781203e-18,
       "setting": "rho 0 -> 1",
-      "sign_agreement": 0.8,
+      "sign_agreement": 1.0,
       "world": "junction"
     },
     {
@@ -80,11 +91,11 @@
     },
     {
       "family": "confound",
-      "max": -6.661338147750939e-19,
-      "mean": -2.450600486425536e-18,
-      "min": -4.180683577104105e-18,
+      "max": 4.180683577104105e-18,
+      "mean": 2.450600486425536e-18,
+      "min": 6.661338147750939e-19,
       "n": 5,
-      "quantity": "bald_hi",
+      "quantity": "bald_abs_hi",
       "sd": 1.355351518385087e-18,
       "setting": "rho 0 -> 1",
       "sign_agreement": 1.0,
