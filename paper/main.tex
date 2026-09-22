@@ -1,0 +1,505 @@
+% Uncertainty-Aware Routing Needs an Ensemble You Do Not Have
+%
+% Build:  cd paper && latexmk -pdf main.tex      (or: python3 ../scripts/build_paper.py)
+%
+% THE PAPER CONTAINS NO TYPED NUMERALS. Every quantity below is a macro defined in
+% paper/generated/numbers.tex, and every table body is a file in paper/generated/, all written by
+% scripts/make_paper_tables.py from experiments/results/*/summary.json. scripts/audit_paper.py
+% regenerates them and fails if anything drifted or if a numeral was typed into the prose.
+\documentclass{article}
+\usepackage{neuripsish}          % replace with the venue's own style file to submit; see the .sty
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage[numbers, sort&compress]{natbib}
+\usepackage[colorlinks=true, allcolors=blue!55!black]{hyperref}
+
+\input{generated/numbers}
+
+\newcommand{\Pstar}{P^{*}}
+\newcommand{\KL}[2]{\mathrm{KL}(#1\,\|\,#2)}
+
+\title{Uncertainty-Aware Routing Needs an Ensemble You Do Not Have}
+\author{Anonymous submission}
+% Non-anonymous form: replace the line above with the author block the venue asks for.
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Escalating a query to an expensive model pays off only when the cheap model's error is
+\emph{reducible}, so uncertainty-aware routers decompose predictive uncertainty and route on the
+reducible part. Two 2026 results already establish the pieces this rests on: the
+mutual-information estimate of epistemic uncertainty is not the reducible kind, and the
+irreducible term cancels from the escalation decision. Both, however, assume the estimator one
+would like --- independently seeded ensemble members, or multiple independent annotations per
+input. We ask what the estimator you can actually build does instead, in a synthetic
+video-forecasting world where the true conditional $\Pstar$ is exact in closed form, so every
+estimate can be compared against the quantity it claims to estimate. Three measurements. (i) As
+members go from independent to identical at fixed per-member error, the ensemble's true error
+rises $\ConfRiseJ\times$ while its estimate falls to zero; they cross near $\rho=\ConfCross$, and
+the estimator's routing advantage over random is gone by $\rho=0.75$. (ii) Whether
+confidence-based routing merely decays or inverts below random is decided by \emph{why} the cheap
+model is worse: benign under missing evidence, catastrophic under miscalibration, and
+floor-invariant in the one configuration where the estimate is well-posed. (iii) Video has a
+second lever, and \RobPreShareLo--\RobPreShareHi{} of the gain from extending the observed prefix
+is exactly the term that cancels from model escalation. Everything reproduces over \RobSeeds{}
+seeds and two structurally different worlds. No vision-language model was run, and nothing here is
+evidence about real video.
+\end{abstract}
+
+\section{Introduction}
+
+A forecaster sees a prefix of video and reports a distribution over what happens next. For a
+forecast $Q$ on a scene whose true conditional is $\Pstar$, the expected log loss splits exactly:
+%
+\begin{equation}
+\mathbb{E}_{y\sim \Pstar}\!\left[-\log Q(y)\right]
+  \;=\; \underbrace{H(\Pstar)}_{\text{irreducible}} \;+\; \underbrace{\KL{\Pstar}{Q}}_{\text{the forecaster's}}
+\label{eq:split}
+\end{equation}
+%
+This is an identity. $H(\Pstar)$ is a property of the world and the prefix: no forecaster reduces
+it and every forecaster pays it. $\KL{\Pstar}{Q}$ is a property of the forecaster, zero exactly at
+Bayes-optimality, and it is the entire quantity a better model could recover. Escalating one scene
+from a cheap forecaster $Q_c$ to an expensive $Q_e$ therefore changes expected loss by
+%
+\begin{equation}
+\big[H(\Pstar) + \KL{\Pstar}{Q_c}\big] - \big[H(\Pstar) + \KL{\Pstar}{Q_e}\big]
+  \;=\; \KL{\Pstar}{Q_c} - \KL{\Pstar}{Q_e}
+\label{eq:gain}
+\end{equation}
+%
+The irreducible term cancels exactly. But the total predictive entropy $H(\bar Q)$ that
+confidence-based routing ranks by \emph{contains} that term, and is often dominated by it.
+
+\paragraph{What is already established, and is not claimed here.}
+\citet{young2026epistemic} proves that the standard definition of epistemic uncertainty and its
+standard mutual-information measure \citep{houlsby2011bayesian, depeweg2018decomposition} are
+extensionally inconsistent, and that ensemble disagreement ``collapses to zero beneath a positive
+truth under consistent training''. \citet{peale2026flexible} state the cancellation in
+\eqref{eq:gain} in their introduction, build a router that decomposes total uncertainty via
+higher-order predictors \citep{ahdritz2025provable}, and show total-uncertainty routing
+underperforming a pointwise-optimal policy. So the inequality between disagreement and forecaster
+error, the cancellation, and the failure of total-uncertainty routing are \emph{not}
+contributions of this paper. We take them as the setting.
+
+\paragraph{What neither covers.}
+Both assume the estimator one would like. \citet{young2026epistemic} assumes independently seeded
+members; \citet{peale2026flexible} require multiple independent annotations per input plus a
+higher-order calibration guarantee. The practical substitute is an ensemble of similarly
+pre-trained models, or repeated calls to one model, whose errors are correlated by construction.
+That correlation is the free parameter neither paper sweeps, and it is the one a deployment does
+not get to choose. Relatedly, \citet{kirsch2024implicit} reports epistemic estimates collapsing as
+model \emph{complexity} rises, by implicit ensembling --- a different cause, and without a routing
+experiment or a known ground-truth epistemic error to compare against.
+
+\paragraph{Contributions.} All three are measured against a closed-form $\Pstar$, with an explicit
+random-routing baseline, in two structurally different worlds.
+\begin{itemize}\itemsep1pt \parskip0pt
+\item[(i)] \textbf{A $\rho$-parameterised link from member correlation to routing performance.} As
+members go from independent to identical at fixed per-member error, the ensemble's true error
+rises $\ConfRiseJ\times$ while the estimate falls to $\ConfBaldHi$; they cross near
+$\rho=\ConfCross$, and the estimator's skill advantage over random routing is gone by $\rho=0.75$
+(\S\ref{sec:confound}).
+\item[(ii)] \textbf{A mechanism map.} Whether confidence routing decays or inverts is decided by
+the cause of the cheap model's deficit, with the irreducible floor as a controlled variable:
+$\MechJMissEvLo \to \MechJMissEvHi$ under missing evidence against $\MechJOverLo \to
+\MechJOverHi$ under overconfidence (\S\ref{sec:mechanisms}).
+\item[(iii)] \textbf{The prefix lever, which is specific to video.}
+\RobPreShareLo--\RobPreShareHi{} of the gain from extending the prefix is exactly the term that
+cancels from model escalation, so the two spend decisions are near-orthogonal; where evidence is
+non-additive, one confidence score is negatively correlated with one decision and positively with
+the other (\S\ref{sec:prefix}).
+\end{itemize}
+
+\paragraph{What this paper is not.} The world is synthetic; \S\ref{sec:limits} says what that
+costs. No vision-language model was called and no video corpus was used. The results are about
+estimators, not about any real dataset.
+
+\section{An instrument in which the floor is known}
+\label{sec:instrument}
+
+$\Pstar$ is not observable on real video: nobody knows the true distribution of the future given a
+clip, so $H(\Pstar)$ there can only be assumed. Every empirical claim about aleatoric uncertainty
+on real video is therefore a claim about an estimator whose target is unavailable for comparison.
+We work where the target exists.
+
+A scene carries latent cues $z$ with finite alphabets and independent priors. The outcome is drawn
+from $P(y\mid z)$, with logits linear in the cues (world \textsc{junction}) or carrying pairwise
+interactions (world \textsc{kitchen}), softened by a temperature $\tau$. A prefix reveals a subset
+of the cues, recorded by an observability mask $m$ drawn independently of $z$, so the best any
+forecaster can do is $\Pstar(y \mid z_m) = \sum_{z_h} P(z_h)\,P(y \mid z_m, z_h)$ --- an exact
+finite sum over $\JointStates$ joint cue states and $16$ masks in \textsc{junction}. $\tau$ is the
+only knob on the irreducible floor, which runs $\RoutFloorLo$ to $\RoutFloorHi$ nats against a
+ceiling of $\log 4 = \LogK$; prefix length is a second knob, and \S\ref{sec:prefix} uses it.
+
+Forecasters are chosen so their behaviour is known in closed form before they run: Bayes-optimal
+(epistemic exactly zero), uniform (expected loss exactly $\log K$), marginal (excess loss exactly
+$I(y; z_m)$), partial-evidence, tempered, logit-noise with an ensemble-correlation parameter
+$\rho$, and cue-dropout. This is what makes the instrument checkable rather than merely
+plausible: \NumChecks{} validation checks, each with an answer fixed by the mathematics rather than
+by a previous run, pass in \emph{both} worlds --- Bayes-optimal epistemic error $0$ exactly, the
+marginal forecaster's excess loss $\VThreeMeas$ against an enumerated $\VThreeExact$, and an
+evidence ladder matching every rung of its closed form. A further \NumTests{} regression tests
+assert identities rather than current output. Appendix~\ref{app:instrument} gives both worlds and
+the full check table.
+
+\paragraph{Metric.} We report the Spearman correlation between a policy's score and the true
+escalation gain of \eqref{eq:gain}, computed per scene. It has a clean zero when a policy carries
+no signal and a clean sign, so a \emph{negative} value has a deployment meaning: the policy is
+worse than routing at random, spending the budget on the scenes with the least recoverable error.
+Budgeted escalation curves, normalised so that random routing scores $0$ and the oracle $1$, are
+reported alongside in Appendix~\ref{app:curves} and agree. Every number below comes from
+$\NumScenes$ held-out scenes and $\NumMembers$-member ensembles, on CPU, in about ninety seconds
+end to end.
+
+\section{Correlated members: the estimate and the error move in opposite directions}
+\label{sec:confound}
+
+The probe holds each member's own marginal noise scale fixed while sweeping the fraction $\rho$ of
+the logit perturbation that members share. A single member's error therefore does not change with
+$\rho$; only the ensemble's ability to see it does. That invariance is what makes the sweep
+readable, and it is asserted by a test.
+
+\begin{table}[t]
+\centering
+\small
+\caption{As ensemble members go from independent to identical at fixed per-member error
+(\textsc{junction}, $\tau{=}0.9$). Column 1 is the control. The deployed ensemble's true error
+rises $\ConfRiseJ\times$; the estimate of it falls to zero. They cross near $\rho=\ConfCross$.}
+\label{tab:confound}
+\begin{tabular}{lccc}
+\toprule
+$\rho$ & one member's error & ensemble's \textbf{true} error $\KL{\Pstar}{\bar Q}$ & ensemble's \textbf{estimate} (BALD) \\
+\midrule
+\input{generated/tab_confound}
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:confound} reads in three parts. A single member's error is flat
+($\ConfSingleLo \to \ConfSingleHi$). The deployed ensemble's \emph{true} error rises
+$\ConfRiseJ\times$ ($\ConfTrueLo \to \ConfTrueHi$), because averaging cancels only the error the
+members do not share. The \emph{estimate} falls to $\ConfBaldHi$, because it measures disagreement
+and identical members do not disagree. At $\rho=0$ the estimate overstates the ensemble's error by
+$\ConfOverstate\times$; at $\rho=1$ it reports zero for an ensemble carrying $\ConfTrueHi$ nats of
+recoverable error. The two quantities cross near $\rho=\ConfCross$, so there is no correlation
+level at which the estimate is merely conservative.
+
+\paragraph{What that costs a router.} At a fixed world, ranking scenes by the estimate correlates
+$\RoutBaldRhoZero$ with the true gain at $\rho=0$ and $\RoutBaldRhoHigh$ at $\rho=0.75$; its
+budgeted skill against random goes $\RoutSkillBaldRhoZero \to \RoutSkillBaldRhoHigh$. The
+advantage the estimator exists to provide is gone --- and below random --- before members are
+anywhere near identical. A single deterministic model is the $\rho=1$ case in its most extreme and
+most common form: the estimate is identically zero and induces no ranking at all, including for a
+forecaster that ignores the prefix entirely and carries $\DecMarginalEpiTrue$ nats of recoverable
+error.
+
+The aleatoric half of the same estimate fails in the mirror-image way. The true irreducible term is
+$\DecAleaTrue$ nats for every forecaster, as \eqref{eq:split} requires; the ensemble estimate of it
+swings from $\DecAleaHatLo$ to $\DecAleaHatHi$, tracking the forecaster's confidence rather than the
+world. Two forecasters with identical accuracy ($\DecAcc$) and identical true irreducible
+uncertainty report $\DecTempHalfHat$ and $\DecTempTwoHat$ (Appendix~\ref{app:decomposition}).
+
+\section{Whether confidence routing inverts depends on why the cheap model is worse}
+\label{sec:mechanisms}
+
+Sweeping the floor with one cheap/expensive pair invites the reading that the floor is the whole
+story. It is not. Table~\ref{tab:mechanisms} fixes the pair's \emph{cause} and sweeps the floor,
+with a random baseline at zero by construction.
+
+\begin{table}[t]
+\centering
+\small
+\caption{$\mathrm{corr}(\text{score}, \text{true gain})$ in \textsc{junction}, by why the cheap
+forecaster is worse. Negative is worse than routing at random. \emph{n/a} marks a configuration
+where the estimate does not exist rather than being small: a single deterministic forecaster has no
+ensemble spread, so BALD is identically zero and induces no ranking. Irreducible floor
+$\mathbb{E}[H(\Pstar)]$ runs $\RoutFloorLo \to \RoutFloorHi$ nats across the columns.}
+\label{tab:mechanisms}
+\begin{tabular}{lccccccc}
+\toprule
+& \multicolumn{5}{c}{ranking by total uncertainty, $\tau =$} & \multicolumn{2}{c}{BALD} \\
+\cmidrule(lr){2-6}\cmidrule(lr){7-8}
+why the cheap model is worse & \input{generated/tab_mechtaus} & $\tau{=}0.35$ & $\tau{=}3.5$ \\
+\midrule
+\input{generated/tab_mechanisms}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Missing evidence is benign.} A model that cannot see a cue is honestly uncertain, and that
+is also where a better model gains. The correlation decays toward zero
+($\MechJMissEvLo \to \MechJMissEvHi$) but never inverts.
+
+\textbf{Miscalibration is catastrophic, and it inverts at every floor.} An overconfident model's
+entropy is lowest exactly where it is most wrong, so ranking by entropy systematically selects the
+scenes it already handles: $\MechJOverLo \to \MechJOverHi$. Underconfidence is nearly as bad
+($\MechJUnderLo \to \MechJUnderHi$). This is the case that matters outside a synthetic world,
+because overconfidence is the documented failure mode of neural classifiers
+\citep{guo2017calibration} rather than a hypothetical one. \citet{xia2025label} document the same
+direction for label smoothing in selective classification; what the controlled floor adds is that
+the inversion is not a property of the regulariser but of the confidence--error relationship, and
+that it deepens monotonically as the irreducible floor rises.
+
+\textbf{Where the estimate is well-posed, it works, and it is floor-invariant.} With members that
+disagree because evidence is missing --- errors independent by construction --- BALD scores
+$\BaldJEnsLo \to \BaldJEnsHi$ and does not degrade at all as the floor rises, while total
+uncertainty is worse than random everywhere in that same setting
+($\MechJEnsLo \to \MechJEnsHi$). In the non-additive world it is stronger still
+($\BaldKEnsLo \to \BaldKEnsHi$). This is the positive result, and it is what makes the negative
+ones worth reporting: the distinction in \eqref{eq:split} is real and actionable, and the whole
+difficulty is in estimating it.
+
+The mechanism is explicable rather than mysterious. High predictive entropy selects scenes where
+the ensemble has hedged toward uniform, and hedging toward uniform is close to optimal precisely
+when the world is uncertain. Those are the scenes with the least recoverable error.
+\citet{peale2026flexible} name an adjacent condition --- they expect a benefit ``whenever
+reducible and irreducible uncertainty are not too correlated'' --- on a different axis: theirs is
+the correlation between the two terms, ours is the cause of the weak model's deficit, which is a
+property a practitioner can diagnose directly by calibration measurement.
+
+\section{Video has a second lever, and it is made of the term that cancels}
+\label{sec:prefix}
+
+An uncertain forecast admits two responses: spend on the model, or spend on the evidence. The
+second is available in video and not in image classification. It does not obey \eqref{eq:gain},
+because a longer prefix changes $\Pstar$ itself:
+%
+\begin{equation}
+\text{gain(extend prefix } L \to L')
+  = \big[H(\Pstar_L) + \KL{\Pstar_L}{Q}\big] - \big[H(\Pstar_{L'}) + \KL{\Pstar_{L'}}{Q}\big],
+\label{eq:prefix}
+\end{equation}
+%
+whose leading term is $H(\Pstar_L) - H(\Pstar_{L'})$ --- exactly the quantity that cancels from
+model escalation. Masks are nested across lengths, since evidence does not disappear as one keeps
+watching, and the floor is enumerated rather than sampled at every length
+($\PreJFloorOne \to \PreJFloorLast$ nats as $L$ goes $1 \to 32$ in \textsc{junction}).
+
+\begin{table}[t]
+\centering
+\small
+\caption{The two decisions are driven by almost disjoint quantities. Share is the fraction of the
+mean prefix-extension gain that is $\Delta H(\Pstar)$; the correlations are
+$\mathrm{corr}(\text{total uncertainty}, \text{gain})$ for each of the two available actions.}
+\label{tab:prefix}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textsc{junction} (additive evidence)} & \multicolumn{3}{c}{\textsc{kitchen} (non-additive)} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+prefix $L$ & $\Delta H(\Pstar)$ share & $\to$ model & $\to$ prefix & $\Delta H(\Pstar)$ share & $\to$ model & $\to$ prefix \\
+\midrule
+\input{generated/tab_prefix}
+\bottomrule
+\end{tabular}
+\end{table}
+
+The robust part is the share: \PreShareLo--\PreShareHi{} of the prefix-extension gain is the term
+that cancels entirely from model escalation, at every length in both worlds. The two decisions are
+therefore driven by almost disjoint quantities, and a system that ranks both by one confidence
+score is answering the wrong question about one of them.
+
+Whether the two correlations have \emph{opposite signs} depends on the world, and the honest
+version is the narrower one. In \textsc{kitchen} they do at every length: total uncertainty
+correlates $\PreKModelOne \to \PreKModelEight$ with the model decision and
+$\PreKPrefixOne \to \PreKPrefixEight$ with the prefix decision throughout. In \textsc{junction} the
+opposition holds only at the shortest prefix ($\PreJModelOne$ against $\PreJPrefixOne$); by
+$4\to8$ the model correlation has turned positive. Short prefixes with interacting cues are the
+regime video forecasting operates in, and it is where the opposition is robust; the additive world
+is where it is not. Prior work on video anticipation under ambiguity treats the prediction
+\emph{horizon} as the axis \citep{farha2019uncertainty}; the observation prefix is a different
+lever, and the non-cancellation in \eqref{eq:prefix} is what makes it a different decision.
+
+\section{Robustness}
+\label{sec:robustness}
+
+Every claim above is a claim about a sign, and a sign from one run is not yet a claim. We re-ran
+all three families over \RobSeeds{} seeds --- re-drawing the scenes \emph{and} the forecasters'
+noise streams --- and separately bootstrapped the published run with \RobBoot{} resamples of the
+scenes, which separates seed-to-seed variation from the precision of a single reported figure.
+Appendix~\ref{app:robustness} has the table.
+
+\RobMechStable{} of \RobMechCells{} (world, mechanism, floor) cells keep their published sign at
+every seed. The rise in the ensemble's true error as $\rho: 0 \to 1$ is
+$\RobRiseLo$--$\RobRiseHi\times$ across seeds and worlds. BALD on the well-posed ensemble averages
+$\RobBaldEnsLo$ to $\RobBaldEnsHi$ with a seed standard deviation of at most $\RobBaldEnsSd$, and
+the published high-floor figure has a bootstrap interval of $\RobEnsHiCI$. The overconfidence
+inversion at the low floor sits in $\RobOverLoCI$, and at the high floor its seed standard
+deviation is $\RobOverHiSd$. The prefix share is
+\RobPreShareLo--\RobPreShareHi{} over every seed, world and length.
+
+One cell is not sign-stable and should not be read as a sign: the prefix-decision correlation stays
+positive in \RobPrePositive{} of \RobPreCells{} cells, but the model-decision correlation keeps its
+sign in only \RobPreModel{}, the exception being \textsc{junction} $2\to4$, whose published value
+$\PreJModelTwo$ is indistinguishable from zero. That is the cell the narrowed claim in
+\S\ref{sec:prefix} already excludes.
+
+\section{What this is not evidence about}
+\label{sec:limits}
+
+\textbf{The world is synthetic, and that is not incidental.} $\Pstar$ exists here because we built
+it. Nothing measured above is evidence about any real corpus. The argument that it transfers is an
+argument and not a measurement: the estimators under test are the deployed ones, so showing what
+they do where the truth is known is informative about what they do where it is not. A reader may
+decline that argument, and the claims should then be read as claims about estimators only.
+
+\textbf{$\rho$ is a knob, not a measurement.} We show what member correlation costs a router. We do
+not measure the $\rho$ of any real ensemble, and whether repeated calls to one model form a
+high-$\rho$ ensemble is an assumption --- made more plausible by the removal of temperature
+controls from current model APIs, but not established here.
+
+\textbf{No vision-language model was called.} The arm is implemented, prompted, cached and costed
+at roughly one dollar, and it was not run: no credential existed on the machine. It is the only
+setting in which a real model could be handed a true $\KL{\Pstar}{Q}$, and its three predictions
+are recorded, falsifiable and untested.
+
+\textbf{The metric is a ranking diagnostic.} Spearman correlation with the true gain is not a
+deployment number. Budgeted curves normalised against random and the oracle are in
+Appendix~\ref{app:curves}; they agree on every sign reported here, and they are what a budgeted
+deployment would actually read.
+
+\section{Conclusion}
+
+The reducible/irreducible distinction is real and actionable: in the one configuration where the
+estimate is well-posed, it ranks escalation candidates at $\BaldJEnsLo$ to $\BaldKEnsHi$ and does
+not care how uncertain the world is. The difficulty is entirely in estimating it, and the regime
+where the estimate inverts against the truth --- members that share their errors --- is the regime
+a deployment is in. Meanwhile confidence routing's failure is not a fact about confidence but about
+the cheap model's calibration, which is diagnosable in advance. And in video there is a second
+lever whose gain is almost entirely the term that cancels from the first, so one confidence score
+cannot serve both.
+
+\small
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\normalsize
+\appendix
+\newpage
+
+\section{The instrument, and the two worlds}
+\label{app:instrument}
+
+\input{generated/app_worlds}
+
+\begin{table}[h]
+\centering
+\small
+\caption{The validation checks. Each expectation was fixed by the mathematics before the check
+ran, and every check is world-independent by construction --- which is tested rather than asserted
+by running them in the second world, where they also pass.}
+\label{tab:validation}
+\begin{tabular}{llll}
+\toprule
+& claim & expected & measured \\
+\midrule
+\input{generated/tab_validation}
+\bottomrule
+\end{tabular}
+\end{table}
+
+A renderer exists so that the vision-language arm would be a real experiment rather than a
+description of one; it is not used by any measurement in this paper. Its contract is that a cue the
+mask hides must not be recoverable from the pixels, which is verified on $\RenderPairs$ scene pairs
+differing only in a hidden cue: maximum pixel difference exactly zero.
+
+\section{The full decomposition table}
+\label{app:decomposition}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Both decompositions side by side, \textsc{junction}, $\tau{=}0.9$. The
+\textbf{true} irreducible column is constant, as \eqref{eq:split} requires. The \textbf{estimated}
+column (bold) is not: it tracks the forecaster's confidence. The estimated epistemic column is
+exactly zero for every deterministic forecaster, including one whose true epistemic error is the
+largest in the table among forecasters that read the prefix at all.}
+\label{tab:decomposition}
+\begin{tabular}{lccccc}
+\toprule
+forecaster & irred.\ true & irred.\ \textbf{est.} & epist.\ true & epist.\ est. & acc. \\
+\midrule
+\input{generated/tab_decomposition}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{The mechanism map in the second world}
+\label{app:mechanisms}
+
+\begin{table}[h]
+\centering
+\small
+\caption{As Table~\ref{tab:mechanisms}, in \textsc{kitchen}: three outcomes, five cues, mixed
+alphabets, no symmetry, and \emph{non-additive} evidence. No sign reverses between the worlds. Two
+findings sharpen: BALD on the well-posed ensemble improves, and the benign case stops decaying.}
+\label{tab:mechanisms-kitchen}
+\begin{tabular}{lccccccc}
+\toprule
+& \multicolumn{5}{c}{ranking by total uncertainty, $\tau =$} & \multicolumn{2}{c}{BALD} \\
+\cmidrule(lr){2-6}\cmidrule(lr){7-8}
+why the cheap model is worse & \input{generated/tab_mechtaus} & $\tau{=}0.35$ & $\tau{=}3.5$ \\
+\midrule
+\input{generated/tab_mechanisms_kitchen}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures/fig4_mechanisms.png}
+\caption{The mechanism map of Table~\ref{tab:mechanisms} as a heat map. Hatched cells are
+configurations in which the estimate does not exist rather than being small.}
+\label{fig:mechanisms}
+\end{figure}
+
+\section{Budgeted curves and the skill score}
+\label{app:curves}
+
+The correlation reported throughout is a ranking diagnostic. The deployment-facing number is the
+budgeted escalation curve: at budget $b$ the policy escalates the $b$ fraction of scenes it scores
+highest, and the curve reports the resulting mean expected loss. Efficiency is normalised against
+the oracle \emph{at the same budget}, since a policy at budget $b$ cannot do better than escalating
+the $b$ scenes with the largest true gain, and then rescaled so that random routing scores $0$ and
+the oracle $1$. Without that rescaling a random policy scores about $0.6$ against the oracle, which
+compresses every comparison into the top of the range and makes a policy that is worse than random
+still look as though it captures most of the gain.
+
+\input{generated/app_curves}
+
+\section{Robustness in full}
+\label{app:robustness}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Seed spread over \RobSeeds{} seeds, which re-draw the scenes and the forecasters' noise
+streams, and the percentile bootstrap interval of the published run (\RobBoot{} resamples of the
+scenes; the members are not a sample from a population, so they are not resampled). ``sign'' is
+the fraction of seeds agreeing with the published sign.}
+\label{tab:robustness}
+\begin{tabular}{lccccc}
+\toprule
+quantity & mean & sd & min, max & sign & bootstrap 95\% CI \\
+\midrule
+\input{generated/tab_robustness}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Reproduction}
+\label{app:repro}
+
+Everything is CPU-only, single-process, and about ninety seconds end to end for the main results;
+the seed sweep in Appendix~\ref{app:robustness} takes a few minutes more. There is no GPU, no
+network access, no API key and no data file involved. Each experiment writes one row per scored
+prediction alongside the reduced numbers, so every figure in this paper traces to the rows it came
+from, and the paper's own numerals are generated from those files rather than typed.
+
+\input{generated/app_repro}
+
+\end{document}
