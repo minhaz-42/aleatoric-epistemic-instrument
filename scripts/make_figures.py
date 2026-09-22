@@ -276,12 +276,87 @@ def fig_prefix():
     _table(pd.DataFrame(rows + (krows or [])), "prefix.csv")
 
 
+def fig_robustness():
+    """How much of every reported sign is the seed, and how much is the measurement.
+
+    A forest plot rather than a bar chart, because each quantity is an interval and the comparison
+    a reader has to make is between two intervals of different kinds: the spread over seeds, which
+    re-draw the scenes AND the forecasters' noise, and the bootstrap spread within the published
+    run, which re-draws only its scenes. The seed spread is usually the tighter of the two, so it
+    is drawn on top of the bootstrap band rather than beside it -- and the one row where that is
+    not true is the row this figure exists to show.
+    """
+    rows = read_summary("robustness")["rows"]
+    by = {(r["family"], r["world"], r["setting"], r["quantity"]): r for r in rows}
+    picks = [
+        ("mechanism", "junction", "missing_evidence@tau0.35", "corr_total",
+         "total unc: missing evidence, low floor"),
+        ("mechanism", "junction", "missing_evidence@tau3.5", "corr_total",
+         "total unc: missing evidence, high floor"),
+        ("mechanism", "junction", "overconfidence@tau3.5", "corr_total",
+         "total unc: overconfidence, high floor"),
+        ("mechanism", "junction", "evidence_ensemble@tau0.35", "corr_bald",
+         "BALD: well-posed ensemble, low floor"),
+        ("mechanism", "junction", "evidence_ensemble@tau3.5", "corr_bald",
+         "BALD: well-posed ensemble, high floor"),
+        ("prefix", "junction", "L1->2", "corr_total_prefix",
+         "total unc to prefix gain, L=1 to 2"),
+        ("prefix", "junction", "L2->4", "corr_total_model",
+         "total unc to model gain, L=2 to 4"),
+    ]
+
+    fig, axes = plt.subplots(1, 2, figsize=(12.6, 3.8),
+                             gridspec_kw={"width_ratios": [1, 2.6], "wspace": 0.62})
+
+    # left: the one quantity that is not a correlation, so it gets its own axis and its own units
+    ax = axes[0]
+    for y, (w, c) in enumerate((("kitchen", ORANGE), ("junction", BLUE))):
+        r = by[("confound", w, "rho 0 -> 1", "true_rise_factor")]
+        ax.errorbar([r["mean"]], [y], xerr=[[r["mean"] - r["min"]], [r["max"] - r["mean"]]],
+                    fmt="o", color=c, capsize=5, lw=2.2)
+        ax.annotate(f"{w}   {r['mean']:.1f}x", (r["mean"], y), textcoords="offset points",
+                    xytext=(0, 12), ha="center", fontsize=8.5, color=c)
+    ax.set_yticks([]); ax.set_ylim(-0.7, 1.7); ax.set_xlim(9.2, 11.0)
+    ax.set_xlabel("multiple")
+    ax.set_title("the ensemble's TRUE error rises\nby this much as members correlate",
+                 loc="left", fontsize=9)
+    ax.grid(axis="x", lw=0.6); ax.set_axisbelow(True)
+
+    # right: the correlations. Bootstrap band underneath, seed range on top of it.
+    ax = axes[1]
+    ys = np.arange(len(picks))[::-1]
+    for y, (fam, world, setting, q, label) in zip(ys, picks):
+        r = by[(fam, world, setting, q)]
+        stable = r["sign_agreement"] >= 1.0
+        col = BLUE if stable else MUTED
+        if "ci_lo" in r:
+            ax.plot([r["ci_lo"], r["ci_hi"]], [y, y], color=col, lw=9, alpha=0.22,
+                    solid_capstyle="butt")
+        ax.plot([r["min"], r["max"]], [y, y], color=col, lw=2.6, solid_capstyle="butt")
+        ax.plot([r["mean"]], [y], "o", color=col, ms=5.0)
+        if not stable:
+            ax.annotate(f"sign holds in only {r['sign_agreement']:.0%} of seeds",
+                        (max(r["max"], r.get("ci_hi", -9.0)), y), textcoords="offset points",
+                        xytext=(10, -3), fontsize=8, color=MUTED, va="center")
+    ax.axvline(0, color=INK2, lw=1.0)
+    ax.set_yticks(ys); ax.set_yticklabels([k[4] for k in picks], fontsize=8.5)
+    ax.set_xlabel("corr(score, true gain)")
+    ax.set_xlim(-1.08, 1.02)
+    ax.set_title("dark bar = range over 5 seeds        pale band = bootstrap 95% CI of the "
+                 "published run", loc="left", fontsize=9)
+    ax.grid(axis="x", lw=0.6); ax.set_axisbelow(True)
+
+    fig.suptitle("Every reported sign survives re-seeding except one, which is reported as zero",
+                 x=0.005, y=1.05, ha="left", fontsize=10.5)
+    _save(fig, "fig6_robustness.png")
+
+
 def main():
     print("figures:")
     made = 0
     for fn, need in ((fig_decomposition, "decomposition"), (fig_confound, "validation"),
                      (fig_routing, "routing"), (fig_mechanisms, "mechanisms"),
-                     (fig_prefix, "prefix")):
+                     (fig_prefix, "prefix"), (fig_robustness, "robustness")):
         if not os.path.exists(os.path.join(RESULTS, need, "summary.json")):
             print(f"  skip {fn.__name__}: run the experiment that writes {need}/ first")
             continue

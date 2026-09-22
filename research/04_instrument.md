@@ -311,7 +311,9 @@ a statement about one figure. Both are reported.
 bootstrap interval of [−0.001, +0.086] around a published +0.043. "Decays toward zero" is therefore
 the correct reading and "retains a little signal" is not, and the write-up says so.
 
-Table: `tables/robustness.csv`. Records: `experiments/results/robustness/`.
+Figure: `figures/fig6_robustness.png` — the seed range drawn on top of the bootstrap band,
+which is what makes the `missing_evidence` row above legible at a glance. Table:
+`tables/robustness.csv`. Records: `experiments/results/robustness/`.
 
 ## 6. Generality: the same experiments in a second world
 
