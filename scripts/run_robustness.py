@@ -108,6 +108,9 @@ def family_confound(seeds, n_scenes, members) -> list:
                 "single_lo": lo["single_member_kl"], "single_hi": hi["single_member_kl"],
                 "true_lo": lo["epistemic_true"], "true_hi": hi["epistemic_true"],
                 "bald_lo": lo["epistemic_hat"], "bald_hi": hi["epistemic_hat"],
+                # the magnitude, because the sign of a 1e-18 is floating-point dust and a
+                # sign-agreement figure computed on it would be reporting noise as a result
+                "bald_abs_hi": abs(hi["epistemic_hat"]),
                 "true_rise_factor": hi["epistemic_true"] / max(lo["epistemic_true"], 1e-12),
                 "overstate_at_rho0": lo["ratio_hat_over_true"],
                 "crossing_rho": cross,
@@ -204,7 +207,7 @@ def main():
     # ---- reduce to one record per claim, and say whether the sign held --------------------
     out = []
     for (world, setting), g in frame[frame.family == "confound"].groupby(["world", "setting"]):
-        for q in ("true_rise_factor", "bald_hi", "overstate_at_rho0", "crossing_rho"):
+        for q in ("true_rise_factor", "bald_abs_hi", "overstate_at_rho0", "crossing_rho"):
             out.append({"family": "confound", "world": world, "setting": setting, "quantity": q,
                         **agg(g[q].tolist(), published=g[g.seed == SEED][q].iloc[0])})
     mech = frame[frame.family == "mechanism"]
@@ -246,8 +249,8 @@ def main():
     rise = pick("confound", "true_rise_factor")
     for _, r in rise.iterrows():
         print(f"  confound {r.world:9s}: true error rises x{r['mean']:.1f} +/- {r['sd']:.1f} "
-              f"(range {r['min']:.1f}-{r['max']:.1f}); BALD at rho=1 is "
-              f"{pick('confound', 'bald_hi', r.world)['max'].iloc[0]:.1e} at worst")
+              f"(range {r['min']:.1f}-{r['max']:.1f}); |BALD| at rho=1 is at most "
+              f"{pick('confound', 'bald_abs_hi', r.world)['max'].iloc[0]:.1e}")
     signs = pick("mechanism", "corr_total")
     print(f"  mechanism map: {int((signs.sign_agreement >= 1.0).sum())}/{len(signs)} "
           "(world, mechanism, floor) cells keep the published sign at every seed")
@@ -268,6 +271,10 @@ def main():
     print(f"          the prefix-decision correlation stays positive in "
           f"{int((pp.sign_agreement >= 1.0).sum())}/{len(pp)} cells; the model-decision "
           f"correlation keeps its sign in {int((pm.sign_agreement >= 1.0).sum())}/{len(pm)}")
+    for _, r in pm[pm.sign_agreement < 1.0].iterrows():
+        print(f"          NOT sign-stable: {r.world}/{r.setting}, published {r['published']:+.3f}, "
+              f"{r['mean']:+.3f} +/- {r['sd']:.3f} -- indistinguishable from zero, and reported "
+              f"as such")
 
     write_summary("robustness", {
         "seeds": seeds, "n_bootstrap": args.bootstrap, "scenes": args.scenes,
@@ -282,6 +289,12 @@ def main():
             "prefix_cells": int(len(pp)),
             "prefix_positive_stable": int((pp.sign_agreement >= 1.0).sum()),
             "prefix_model_stable": int((pm.sign_agreement >= 1.0).sum()),
+            "bald_abs_hi_max": float(pick("confound", "bald_abs_hi")["max"].max()),
+            "prefix_model_unstable": [
+                {"world": r.world, "setting": r.setting, "published": float(r["published"]),
+                 "mean": float(r["mean"]), "sd": float(r["sd"]),
+                 "sign_agreement": float(r["sign_agreement"])}
+                for _, r in pm[pm.sign_agreement < 1.0].iterrows()],
             "bald_ensemble_min_mean": float(bald["mean"].min()),
             "bald_ensemble_max_mean": float(bald["mean"].max()),
             "bald_ensemble_max_sd": float(bald["sd"].max()),
