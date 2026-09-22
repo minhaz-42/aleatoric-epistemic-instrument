@@ -128,12 +128,16 @@ def v4_evidence_monotone(world, scenes) -> Check:
     and every rung matches a number computed by enumeration rather than by sampling.
     """
     from ..baselines.predictors import BayesOptimal, Marginal, PartialEvidence
-    ladder = [(BayesOptimal(world), ("heading", "speed", "signal", "blocker")),
-              (PartialEvidence(world, ("heading", "speed", "signal")), ("heading", "speed", "signal")),
-              (PartialEvidence(world, ("heading", "speed")), ("heading", "speed")),
-              (PartialEvidence(world, ("heading",)), ("heading",)),
-              (Marginal(world), ())]
+    # Cue names come from the world, so the ladder is the same experiment in any world rather than
+    # one wired to the junction's vocabulary. Rungs drop cues from the least visible upward, which
+    # is the order in which a real prefix loses them.
     names = [c.name for c in world.spec.cues]
+    order = sorted(names, key=lambda n: -dict((c.name, c.visibility) for c in world.spec.cues)[n])
+    keeps = [tuple(order[:k]) for k in range(len(order), 0, -1)] + [()]
+    ladder = [(BayesOptimal(world), tuple(order))]
+    for keep in keeps[1:-1]:
+        ladder.append((PartialEvidence(world, keep), keep))
+    ladder.append((Marginal(world), ()))
 
     rungs, ok = [], True
     for f, keep in ladder:

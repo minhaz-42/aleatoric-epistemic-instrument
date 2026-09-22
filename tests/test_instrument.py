@@ -326,10 +326,66 @@ def t19():
     assert aurc(losses, losses) <= aurc(r.random(500), losses) + 1e-9
 
 
+@check("T20 prefix masks are nested: a longer prefix reveals a superset")
+def t20():
+    """Evidence does not disappear as you keep watching.
+
+    Without nesting, a prefix-extension gain can come out negative for a reason that is an artefact
+    of the mask sampler rather than a property of the world, which would corrupt claim G's headline.
+    """
+    from src.temporal.prefix import nested_scene
+    L = (1, 2, 4, 8, 16, 32)
+    r = rng(21, "t20")
+    pairs = 0
+    for i in range(300):
+        d = nested_scene(W, r, i, L)
+        masks = [d[l][1].mask for l in L]
+        zs = [d[l][1].z for l in L]
+        ys = [d[l][1].y for l in L]
+        assert all((z == zs[0]).all() for z in zs), "cue vector changed across prefix lengths"
+        assert all(y == ys[0] for y in ys), "outcome changed across prefix lengths"
+        for a, b in zip(masks, masks[1:]):
+            assert bool(np.all(b >= a)), f"scene {i}: a longer prefix hid a cue the shorter one showed"
+            pairs += 1
+    assert pairs > 1000, f"only {pairs} nested pairs exercised"
+
+
+@check("D9  a longer prefix lowers the floor in the MEAN, and can raise it on a single scene")
+def t21():
+    """The third instance of the same error class, and the reason this one is a D-test.
+
+    An earlier revision asserted that nesting the masks made the floor monotone scene by scene.
+    It does not, and nesting has nothing to do with it: conditioning reduces entropy *on average*
+    (H(Y|X) <= H(Y)), never pointwise. A newly revealed cue that points against what the shorter
+    prefix implied genuinely raises that scene's posterior entropy — on scene 0 the floor went
+    0.9299 at L=8 to 0.9440 at L=16.
+
+    Same shape as D1: assert the mean version holds, and assert the pointwise version is violated,
+    so the wrong claim cannot come back. V5's enumerated sweep is monotone precisely because it is
+    an expectation.
+    """
+    from src.temporal.prefix import nested_scene
+    L = (1, 2, 4, 8, 16, 32)
+    r = rng(22, "t21")
+    cols = {l: [] for l in L}
+    pointwise_violations = 0
+    for i in range(400):
+        d = nested_scene(W, r, i, L)
+        a = [d[l][1].aleatoric for l in L]
+        for l, v in zip(L, a):
+            cols[l].append(v)
+        pointwise_violations += sum(1 for x, y in zip(a, a[1:]) if y > x + 1e-12)
+    means = [float(np.mean(cols[l])) for l in L]
+    assert all(y <= x + 1e-9 for x, y in zip(means, means[1:])), \
+        f"mean floor rose with prefix length: {means}"
+    assert pointwise_violations > 0, \
+        "no pointwise violation found -- the pointwise claim would look true, and it is not"
+
+
 def main():
     print("instrument regression tests\n")
     for fn in (t1, t2, t3, t4, t5, t6, t7, t8, t9, d1, d2, t10, t11, t12, t13, t14, t15, t16,
-               t17, t18, t19):
+               t17, t18, t19, t20, t21):
         fn()
     ok = sum(1 for _, p, _ in RESULTS if p)
     print(f"\n{ok}/{len(RESULTS)} passed")

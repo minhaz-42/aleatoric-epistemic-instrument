@@ -5,7 +5,8 @@ in about 90 seconds total. No model, no network, no data files.
 
 ## 1. The world
 
-`EvidenceWorld` (`src/forecasting/world.py`), instantiated as `junction` (`src/forecasting/scenarios.py`).
+`EvidenceWorld` (`src/forecasting/world.py`), instantiated as `junction` and, for the generality
+check in §6, as `kitchen` (`src/forecasting/scenarios.py`).
 
 An agent approaches a four-way junction; the forecast is which exit it takes, from
 `{left, straight, right, stop}`. Four cues, each a different *kind* of evidence and each differing
@@ -61,13 +62,15 @@ makes the ρ sweep interpretable, and it is asserted in test T9.
 ## 3. Validation: V1–V7
 
 `python3 scripts/validate_instrument.py` — **7/7 pass**, 2000 scenes (the default), ~8 s.
-Every expectation was fixed by the mathematics before the check ran.
+Every expectation was fixed by the mathematics before the check ran. The checks are
+world-independent by construction, and §6 tests that claim rather than asserting it: they also give
+**7/7** on the second world.
 
 | id | claim | expected | measured |
 |---|---|---|---|
 | V1 | Bayes-optimal has zero epistemic error | max KL = 0 exactly | **0.000e+00** |
 | V2 | uniform scores log K on every scene | 1.386294 exactly | max deviation **4.4e-16** |
-| V3 | marginal's excess loss = I(y; z_m) | 0.383812 nats (exact) | **0.378616** ± 0.015 (3 sem) |
+| V3 | marginal's excess loss = I(y; z_m) | 0.383812 nats (exact) | **0.382810** ± 0.015 (3 sem) |
 | V4 | expected epistemic monotone in cues used, and matches closed form | non-decreasing; every rung within 3 sem of its enumerated value | monotone; **5/5 rungs match** |
 | V5 | longer prefix never raises the floor | every difference ≤ 0 | max increase **−1.0e-02** |
 | V6 | estimate and truth move in opposite directions as members correlate | see §4 | see §4 |
@@ -78,10 +81,10 @@ The V4 ladder against its enumerated values:
 | cues read | exact E[excess] | measured |
 |---|---|---|
 | all four | 0.000000 | 0.000000 |
-| heading, speed, signal | 0.048312 | 0.048041 |
-| heading, speed | 0.115331 | 0.111536 |
-| heading | 0.183902 | 0.180950 |
-| none | 0.383812 | 0.378616 |
+| heading, speed, signal | 0.048312 | 0.047361 |
+| heading, speed | 0.115331 | 0.114348 |
+| heading | 0.183902 | 0.182313 |
+| none | 0.383812 | 0.382810 |
 
 ## 4. V6, the confound control — the central measurement
 
@@ -89,16 +92,16 @@ At fixed noise scale, as ensemble members go from independent (ρ=0) to identica
 
 | ρ | one member's error | ensemble's **true** error KL(P*‖Q̄) | ensemble's **estimate** (BALD) |
 |---|---|---|---|
-| 0.00 | 0.1561 | 0.0150 | 0.1199 |
-| 0.25 | 0.1553 | 0.0434 | 0.0906 |
-| 0.50 | 0.1543 | 0.0755 | 0.0612 |
-| 0.75 | 0.1531 | 0.1109 | 0.0311 |
-| 0.90 | 0.1519 | 0.1338 | 0.0126 |
-| 1.00 | 0.1498 | **0.1498** | **−3.5e-18** |
+| 0.00 | 0.1569 | 0.0148 | 0.1196 |
+| 0.25 | 0.1561 | 0.0430 | 0.0903 |
+| 0.50 | 0.1551 | 0.0750 | 0.0610 |
+| 0.75 | 0.1539 | 0.1103 | 0.0310 |
+| 0.90 | 0.1527 | 0.1331 | 0.0125 |
+| 1.00 | 0.1491 | **0.1491** | **+3.8e-19** |
 
 Read it in three parts:
 
-1. **A single member's error is flat** (0.1561 → 0.1498). `ρ` changes how members relate to each
+1. **A single member's error is flat** (0.1569 → 0.1491). `ρ` changes how members relate to each
    other, not how wrong any one of them is. This is the control that makes the other two columns
    readable.
 2. **The deployed ensemble's true error rises 10.0×.** Averaging only cancels error the members do
@@ -107,8 +110,8 @@ Read it in three parts:
    disagree.
 
 So the estimate and the quantity it stands in for **move in opposite directions and cross** near
-ρ = 0.5. At ρ = 0 the estimate *overstates* the ensemble's error by 8.0×; at ρ = 1 it reports zero
-for an ensemble carrying 0.150 nats of recoverable error.
+ρ = 0.5. At ρ = 0 the estimate *overstates* the ensemble's error by 8.1×; at ρ = 1 it reports zero
+for an ensemble carrying 0.149 nats of recoverable error.
 
 Figure: `figures/fig2_confound.png`. Table: `tables/confound_rho_sweep.csv`.
 
@@ -182,23 +185,23 @@ corr(score, true gain), at τ = 0.35 → τ = 3.50:
 
 | why the cheap model is worse | total uncertainty | epistemic (BALD) |
 |---|---|---|
-| missing evidence | +0.207 → +0.049 | n/a (deterministic) |
-| injected noise | +0.326 → −0.580 | +0.288 → −0.220 |
-| **overconfidence** (T=0.4) | **−0.395 → −0.993** | n/a (deterministic) |
-| underconfidence (T=2.5) | −0.263 → −0.983 | n/a (deterministic) |
-| **evidence ensemble** (cue dropout) | −0.304 → −0.484 | **+0.570 → +0.686** |
-| mixed | +0.396 → −0.491 | +0.355 → −0.157 |
+| missing evidence | +0.158 → +0.043 | n/a (deterministic) |
+| injected noise | +0.375 → −0.613 | +0.327 → −0.236 |
+| **overconfidence** (T=0.4) | **−0.443 → −0.992** | n/a (deterministic) |
+| underconfidence (T=2.5) | −0.307 → −0.978 | n/a (deterministic) |
+| **evidence ensemble** (cue dropout) | −0.277 → −0.460 | **+0.557 → +0.663** |
+| mixed | +0.405 → −0.494 | +0.354 → −0.163 |
 
 - **Missing evidence is the benign case.** A model that cannot see a cue is honestly uncertain, and
   that is also where a better model gains. The correlation decays toward zero but never inverts.
 - **Miscalibration is the catastrophic case, and it inverts at every floor.** An overconfident
   model's entropy is lowest exactly where it is most wrong, so ranking by entropy systematically
-  selects the scenes it already handles. At τ=1.3 and above the correlation is below −0.94. This is
+  selects the scenes it already handles. At τ=1.3 and above the correlation is below −0.95. This is
   the case that matters outside the synthetic world, because overconfidence is the documented
   failure mode of neural classifiers rather than a hypothetical one.
 - **The one configuration where the epistemic estimate is well-posed, it works and is
   floor-invariant.** With members that disagree because evidence is missing and whose errors are
-  independent by construction, BALD scores +0.57 to +0.69 and *does not degrade at all* as the
+  independent by construction, BALD scores +0.56 to +0.66 and *does not degrade at all* as the
   irreducible floor rises — while total uncertainty is worse than random everywhere in the same
   setting. That is the positive result, and it is what makes the negative ones worth reporting: the
   aleatoric/epistemic distinction is real and actionable; the difficulty is entirely in estimating
@@ -209,7 +212,106 @@ deterministic forecaster has no ensemble spread, so BALD is identically zero and
 
 Figure: `figures/fig4_mechanisms.png`.
 
-## 6. Rendering, and the contract it must honour
+### 5.4 Prefix length: the term that cancels for models carries the prefix decision
+
+`scripts/run_prefix.py`. This is the only measurement here that is specific to video: an image
+classifier has no prefix to extend.
+
+An uncertain forecast admits two responses — spend on the model, or spend on the evidence. The
+identity in §4 of `research/01_problem_and_position.md` says `H(P*)` cancels from the first. It does
+not cancel from the second, because a longer prefix changes `P*` itself, and the leading term is
+exactly `H(P*_L) − H(P*_L')`.
+
+Measured, with masks nested across lengths (a longer prefix reveals a superset — see defect D9):
+
+| prefix | share of prefix gain that is ΔH(P*) | corr(total unc., **model** gain) | corr(total unc., **prefix** gain) |
+|---|---|---|---|
+| **junction** (additive) | | | |
+| 1 → 2 | 94% | **−0.189** | **+0.151** |
+| 2 → 4 | 94% | +0.001 | +0.135 |
+| 4 → 8 | 95% | +0.084 | +0.117 |
+| 8 → 16 | 92% | +0.127 | +0.070 |
+| **kitchen** (non-additive) | | | |
+| 1 → 2 | 97% | **−0.490** | **+0.059** |
+| 2 → 4 | 93% | −0.346 | +0.052 |
+| 4 → 8 | 96% | −0.220 | +0.083 |
+| 8 → 16 | 97% | −0.133 | +0.060 |
+
+**The robust part: 92–97% of the prefix-extension gain is the term that cancels entirely from model
+escalation.** That holds in both worlds at every length, and it is the claim's core — the two
+decisions are driven by almost disjoint quantities.
+
+**The part that depends on the world: whether the two correlations have opposite signs.** In
+`kitchen` they do at every prefix length: total uncertainty is negatively correlated with the model
+decision (−0.490 → −0.133) and positively with the prefix decision (+0.059 → +0.060) throughout. In
+`junction` the opposition holds only at the shortest prefix (−0.189 against +0.151); by L=2→4 the
+model correlation has turned positive, and by L=8→16 it has overtaken the prefix correlation
+(+0.127 against +0.070).
+
+So the honest statement is narrower than "a single confidence score cannot serve both decisions".
+It is: **the gain from extending the prefix is almost entirely the irreducible term, so the two
+decisions are near-orthogonal; and where evidence is non-additive, ranking by confidence is actively
+wrong for the model decision at every prefix length while remaining right for the prefix decision.**
+Short prefixes with interacting cues are the regime video forecasting operates in, and an image
+classifier has no second decision to serve at all.
+
+Figure: `figures/fig5_prefix.png`. Table: `tables/prefix.csv`.
+
+## 6. Generality: the same experiments in a second world
+
+Every result above comes from the `junction` world, which made generality the largest open risk once
+the literature risk was paid. `kitchen` exists to retire it. It differs on every axis that could
+plausibly matter:
+
+| | junction | kitchen |
+|---|---|---|
+| outcomes | 4 | 3 |
+| cues | 4 | 5 |
+| alphabets | uniformly ternary | mixed binary and ternary |
+| symmetry | left/right mirrored (creates exact ties, see D6) | none |
+| visibility | 0.95 → 0.40 | 0.90 → 0.35, flatter |
+| evidence | **additive** (linear in the cues) | **non-additive** (pairwise interactions) |
+| joint states | 81 | 108 |
+
+Non-additivity is the important one. In `kitchen`, pouring needs a vessel *and* a spoon-like tool;
+either alone says little. So losing one cue can be catastrophic rather than gradual, which is the
+structure most likely to break a mechanism map built on gradual evidence loss.
+
+**The instrument validates in both.** `python3 scripts/validate_instrument.py --world kitchen`
+gives **7/7**, with V4 matching all 6 rungs of its (longer) ladder against enumerated values, and V6
+reproducing the confound at **9.5×** against the junction's 10.0×.
+
+**The findings reproduce, and two get sharper.**
+
+| result | junction | kitchen |
+|---|---|---|
+| V6 rise in true error as ρ → 1 | 10.0× | 9.5× |
+| mechanism: injected noise | +0.375 → −0.613 | +0.306 → −0.574 |
+| mechanism: overconfidence | −0.443 → −0.992 | −0.223 → **−1.000** |
+| mechanism: underconfidence | −0.307 → −0.978 | −0.722 → −0.997 |
+| mechanism: missing evidence | +0.158 → +0.043 | +0.190 → **+0.168** |
+| mechanism: evidence ensemble (BALD) | +0.557 → +0.663 | **+0.819 → +0.843** |
+| prefix: share of gain that is ΔH(P*) | 92–95% | 93–97% |
+| prefix: corr(total, model) at the shortest prefix | −0.189 | **−0.490** |
+| prefix: corr(total, prefix) at the shortest prefix | +0.151 | +0.059 |
+
+Two things are stronger under non-additive evidence, and both for the same reason — losing a cue
+matters more, so evidence-driven disagreement is more informative and confidence is more misleading:
+
+- **BALD on a well-posed ensemble improves** from +0.56–0.66 to +0.82–0.84, still completely
+  floor-invariant.
+- **The prefix sign-opposition holds at every length instead of only the shortest.** In `junction`
+  the model correlation turns positive by L=2→4 and overtakes the prefix correlation by L=8→16; in
+  `kitchen` it stays negative throughout (−0.490 → −0.133) while the prefix correlation stays
+  positive (+0.059 → +0.060). The non-additive world is where the claim is actually robust.
+
+One thing is weaker and worth naming: `missing_evidence` no longer decays toward zero as the floor
+rises (+0.190 → +0.168 instead of +0.158 → +0.043). With non-additive evidence the benign case stays
+benign across the whole sweep rather than fading.
+
+Nothing reversed sign between the two worlds.
+
+## 7. Rendering, and the contract it must honour
 
 `src/video/render.py` draws a prefix as 8 top-down frames. The instrument does not need pixels —
 every closed-form quantity comes from the cue vector directly, and no validation run calls this
@@ -233,30 +335,37 @@ hidden cue render with a maximum pixel difference of exactly 0.0.** T11 asserts 
 visible cues *do* change the pixels — so the renderer cannot pass T10 by being constant. Measured
 agent displacement is 35 px at speed −1, 70 px at speed +1, and exactly 0 when speed is hidden.
 
-## 7. Tests
+## 8. Tests
 
-`python3 tests/test_instrument.py` — **21/21 pass**, ~17 s.
+`python3 tests/test_instrument.py` — **23/23 pass**, ~17 s.
 
 They assert mathematics, not current output: entropy bounded by log K, KL zero exactly at equality,
 marginalising every cue reproduces the marginal, tempering preserves the ranking, `LogitNoise`
 members correlate at exactly ρ with a ρ-invariant marginal scale, a hidden cue cannot change a
 pixel, the oracle dominates at every budget, splits are stable under adding scenes.
 
-Two of them exist because an earlier revision asserted something false and the suite did not catch
+Three of them exist because an earlier revision asserted something false and the suite did not catch
 it. **D1** pins that evidence monotonicity holds in the mean *and* is false pointwise — it asserts
 both halves, so the wrong version cannot silently pass again. **D2** pins the direction of all three
-quantities in the ρ sweep. See `research/05_defect_register.md`.
+quantities in the ρ sweep. **D9** pins the same thing for prefix length, and is the third instance
+of one error class: taking a statement that holds in expectation and asserting it per sample. See
+`research/05_defect_register.md`.
 
-## 8. Reproducing
+## 9. Reproducing
 
 ```
-python3 tests/test_instrument.py          # 21/21, ~17 s
-python3 scripts/validate_instrument.py    # 7/7,   ~8 s
-python3 scripts/run_decomposition.py      # ~2 s
-python3 scripts/run_routing.py            # ~22 s
-python3 scripts/run_mechanisms.py         # ~25 s
-python3 scripts/render_examples.py        # ~18 s
-python3 scripts/make_figures.py           # ~1 s
+python3 tests/test_instrument.py                    # 23/23, ~17 s
+python3 scripts/validate_instrument.py              # 7/7,   ~8 s
+python3 scripts/validate_instrument.py --world kitchen --tau 0.70   # 7/7, ~12 s
+python3 scripts/run_decomposition.py                # ~2 s
+python3 scripts/run_routing.py                      # ~22 s
+python3 scripts/run_mechanisms.py                   # ~25 s
+python3 scripts/run_mechanisms.py --world kitchen   # ~40 s
+python3 scripts/run_prefix.py                       # ~15 s
+python3 scripts/run_prefix.py --world kitchen --tau 0.70   # ~25 s
+python3 scripts/render_examples.py                  # ~18 s
+python3 scripts/make_figures.py                     # ~1 s
+python3 scripts/audit_numbers.py                    # 67/67 documented numbers
 ```
 
 Everything is seeded from one root (20260921) through `src/utils/seeding.py`, which derives each

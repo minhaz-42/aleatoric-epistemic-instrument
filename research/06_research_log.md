@@ -66,3 +66,80 @@ up before that changes. This is the largest open risk and it is larger than anyt
 
 Final state: 21/21 tests, 7/7 validation checks, four figures, five result tables, ~90 s to
 reproduce everything end to end on CPU.
+
+## 2026-09-21b — literature gate fired; prefix arm run; second world added
+
+**The literature verification pass ran, and it refuted three claims.** This is the entry that
+matters. The previous revision recorded that nothing had been read and that nothing could be written
+up until that changed. Two 2026 papers take most of the project's headline:
+
+- **arXiv:2606.12646**, Robin Young, *Epistemic Uncertainty Is Not the Reducible Kind* `[V]`, proves the
+  mutual-information measure and the reducibility definition are extensionally inconsistent, and
+  shows ensemble disagreement "collapses to zero beneath a positive truth under consistent
+  training". That is claim B, with synthetic closed-form constructions of its own — which also
+  removes the idea that a synthetic instrument with a known `P*` is itself a contribution.
+- **arXiv:2605.07805**, Peale, Devic, Gopalan, Wieder, Gollakota, *Flexible Routing via Uncertainty
+  Decomposition* `[V]`, states in its introduction that "confidence-based methods often fail to
+  account for irreducible (aleatoric) uncertainty … needlessly routing to the oracle even when it
+  would also perform poorly", and builds a router on the irreducible/reducible split. That is
+  claims D and E.
+
+**Ruled out** as headline material: B, D, E. **Demoted**: C. The earlier self-assessment had
+predicted B and C would likely fall and that F was "most likely to survive" — that was roughly
+right, but it underestimated how completely D and E were taken.
+
+What survives, and it is narrow: the correlated-ensemble regime both papers assume away (Peale et
+al. require multiple independent annotations per input; Young assumes independently seeded members), the mechanism map measured against an explicit random baseline with the floor as a
+controlled variable, and the prefix result.
+
+**Two flagged reads, done rather than deferred.** arXiv:2409.02628 reports epistemic-uncertainty
+collapse as *model complexity* rises via implicit ensembling — a real wound to the surviving
+estimator claim, but a different cause from member correlation, and no routing. arXiv:2403.14715
+shows label smoothing degrading selective classification through over/underconfidence — the
+miscalibration half of the mechanism map, known in direction, but with no random baseline, no
+controlled aleatoric variation, and no ablation separating miscalibration from evidence deficiency.
+
+**Prefix arm run (claim G).** The one video-specific measurement, and the only claim no paper was
+found to cover. 92–97% of the gain from extending the prefix is exactly `ΔH(P*)` — the term that
+cancels entirely from model escalation — so the two decisions are driven by almost disjoint
+quantities, in both worlds at every length. Whether the two correlations have *opposite signs* turned
+out to depend on the world: throughout the sweep in the non-additive `kitchen` (−0.490 → −0.133
+against +0.059 → +0.060), but only at the shortest prefix in the additive `junction` (−0.189 against
++0.151), where the model correlation turns positive by L=2→4. The claim was narrowed accordingly.
+Required nested masks across prefix lengths
+(`temporal.prefix.nested_scene`): a longer prefix must reveal a superset, or a negative
+prefix-extension gain becomes a sampler artefact.
+
+**Third instance of one error class (defect D9).** The new test asserted that nesting made the floor
+monotone scene by scene. It does not, and nesting is irrelevant: conditioning reduces entropy on
+average, never pointwise, and a newly revealed cue that contradicts the shorter prefix genuinely
+raises that scene's entropy (0.9299 at L=8 → 0.9440 at L=16). Same mistake as D1 and D3. A standing
+rule is now recorded: any check on an information-theoretic quantity must state whether it is a
+per-scene or an expectation claim, and expectation claims are tested against an enumerated closed
+form wherever one is computable.
+
+**Second world added, because generality became the largest remaining risk once the literature risk
+was paid.** `kitchen` differs in outcome count (3 vs 4), cue count (5 vs 4), alphabets (mixed vs
+uniformly ternary), symmetry (none vs left/right mirrored) and — the one that matters — in having
+**non-additive** evidence: pairwise cue interactions, so losing one cue can be catastrophic rather
+than gradual. This required adding an optional interaction tensor to `WorldSpec`; the additive path
+is bit-identical afterwards (E[H(P*)] = 0.9919, unchanged).
+
+The instrument gives **7/7 there too**, V6 reproduces at 9.5× against 10.0×, and nothing reverses
+sign. Two findings get *sharper* under non-additive evidence, for the same reason — losing a cue
+matters more: BALD on a well-posed ensemble improves from +0.557–0.663 to +0.819–0.843, and the prefix
+sign-opposition holds at every prefix length instead of only the shortest. One gets weaker and is
+named in the write-up: `missing_evidence` no longer decays toward zero as the floor rises.
+
+**VLM arm: hard-blocked, not deferred.** No `ANTHROPIC_API_KEY`, no `.env`, no `ant` CLI on this
+machine. The arm is written, wired, costed at ~$1.14 and refuses to run without `--confirm`. Nothing
+was spent and nothing could have been.
+
+**Numbers re-audited after the refactor.** Making the scripts world-generic changed the seed-stream
+paths (`rng(seed, "mechanisms", world, ...)`), so the junction scenes differ from the pre-refactor
+run and 19 documented numbers moved. All were re-quoted from the canonical run; the audit script
+now checks 46 documented values against the summaries on disk. The one substantive change was the
+junction prefix narrative above — the drift is what caught it.
+
+Final state: 23/23 tests, 7/7 validation checks in each of two worlds, five figures, seven result
+tables. The open item is no longer "what next" but "is what survived worth writing up".

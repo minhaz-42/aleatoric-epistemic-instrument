@@ -14,6 +14,7 @@ fix in those cases was to the *claim*, not to the code — and those are the one
 | D6 | minor | **FIXED** | Test T8's precondition used the full spread instead of the top-two gap; the world has exact ties by design. |
 | D7 | minor | **FIXED** | `write_summary` crashed on `np.bool_`, losing a completed run's output. |
 | D8 | cosmetic | **FIXED** | Rendered agent travelled too little for speed to be legible, and the motion trail was near-invisible. |
+| D9 | major | **FIXED** | A new test asserted the irreducible floor falls monotonically with prefix length *scene by scene*. False — and it is the third instance of the same error class. |
 | E1 | external | **STANDING** | `temperature` is rejected with a 400 on current Anthropic models. Not a defect; a constraint that changes the VLM arm's design. |
 
 ---
@@ -38,10 +39,10 @@ matches its enumerated value within 3 sem. All five rungs match:
 | cues read | exact | measured |
 |---|---|---|
 | all four | 0.000000 | 0.000000 |
-| heading, speed, signal | 0.048312 | 0.048041 |
-| heading, speed | 0.115331 | 0.111536 |
-| heading | 0.183902 | 0.180950 |
-| none | 0.383812 | 0.378616 |
+| heading, speed, signal | 0.048312 | 0.047361 |
+| heading, speed | 0.115331 | 0.114348 |
+| heading | 0.183902 | 0.182313 |
+| none | 0.383812 | 0.382810 |
 
 **Pinned by** test D1, which asserts the mean version holds *and* that at least one scene violates
 the pointwise version — so the wrong claim cannot silently pass again.
@@ -53,18 +54,18 @@ the pointwise version — so the wrong claim cannot silently pass again.
 **Claimed.** As ensemble members go from independent to identical at fixed noise scale, the true
 epistemic error stays flat while the estimate collapses.
 
-**Evidence it was wrong.** The true error of the ensemble mean rose from 0.0150 to 0.1498 nats —
+**Evidence it was wrong.** The true error of the ensemble mean rose from 0.0148 to 0.1491 nats —
 **10.0×** — across the ρ sweep.
 
 **Why it was wrong.** The claim conflated two different forecasters. A *single member's* error is
-flat (0.1561 → 0.1498, and this was the intended invariance, which does hold). But the deployed
+flat (0.1569 → 0.1491, and this was the intended invariance, which does hold). But the deployed
 forecaster is the ensemble *mean*, and averaging only cancels error the members do not share. As
 they share more, the mean stops being better than its members.
 
 **The fix, and why the truth is a stronger result.** The corrected check tracks all three
 quantities. The finding is no longer "the estimate degrades" but that **the estimate and the
 quantity it stands in for move in opposite directions and cross** near ρ = 0.5. At ρ=0 the estimate
-overstates by 8.0×; at ρ=1 it reports zero for an ensemble carrying 0.150 nats of recoverable error.
+overstates by 8.1×; at ρ=1 it reports zero for an ensemble carrying 0.149 nats of recoverable error.
 That is a sharper claim than the one it replaced.
 
 **Pinned by** test D2, which asserts the direction of all three quantities.
@@ -155,6 +156,34 @@ something other than what it claims.
 **The fix.** Travel raised to 35 px (slow) / 70 px (fast) / exactly 0 (hidden), trail alpha and
 contrast raised. Verified by measuring the agent centroid per frame. The leak test (T10) was re-run
 after the change: 682 pairs, max pixel difference exactly 0.0.
+
+---
+
+## D9 — pointwise prefix monotonicity (major, fixed)
+
+**Claimed.** With nested masks, a longer prefix lowers the irreducible floor scene by scene.
+
+**Evidence it was wrong.** Test T21 failed on its first scene: the floor went **0.9299 at L=8 to
+0.9440 at L=16**.
+
+**Why it was wrong, and why this one matters most.** Nesting has nothing to do with it. Conditioning
+reduces entropy *on average* — `H(Y|X) <= H(Y)` — and never pointwise. A newly revealed cue that
+points against what the shorter prefix implied genuinely raises that scene's posterior entropy. That
+is correct behaviour: more evidence can make a forecaster less certain and more right.
+
+**This is the third instance of one error class.** D1 asserted pointwise monotonicity in the cues
+read; D3 assumed a term that cancels causally must be uncorrelated statistically; D9 asserted
+pointwise monotonicity in prefix length. All three are the same mistake — **taking a statement that
+holds in expectation and asserting it per sample.** Every information-theoretic inequality used in
+this project (the data-processing inequality, conditioning-reduces-entropy, Jensen for the ensemble
+split) is an expectation statement, and none of them constrains a single scene.
+
+**Standing rule.** Any new check on an information-theoretic quantity must state explicitly whether
+it is a per-scene or an expectation claim, and an expectation claim must be tested against an
+enumerated closed form rather than against the sampled mean alone wherever one is computable.
+
+**Pinned by** test D9, which asserts the mean version holds *and* that the pointwise version is
+violated.
 
 ---
 

@@ -216,11 +216,72 @@ def fig_mechanisms():
     _table(pd.DataFrame(rows), "mechanisms.csv")
 
 
+# -- figure 5 ---------------------------------------------------------------------------------
+def fig_prefix():
+    """The irreducible term cancels for model choice but carries the prefix-choice decision.
+
+    Both worlds are shown because the robust half of the claim and the world-dependent half are
+    different halves. The share of the prefix gain that is ΔH(P*) is 92-97% everywhere; whether the
+    two correlations have opposite signs holds throughout only where evidence is non-additive.
+    """
+    s = read_summary("prefix")
+    rows = s["rows"]
+    sweep = {int(k): v for k, v in s["exact_floor_sweep"].items()}
+    Ls = sorted(sweep)
+    try:
+        k = read_summary("prefix_kitchen")
+        krows, ksweep = k["rows"], {int(a): b for a, b in k["exact_floor_sweep"].items()}
+    except FileNotFoundError:
+        krows, ksweep = None, None
+
+    ncol = 3 if krows else 2
+    fig, axes = plt.subplots(1, ncol, figsize=(4.4 * ncol, 3.5))
+
+    ax = axes[0]
+    ax.plot(Ls, [sweep[L] for L in Ls], color=BLUE, marker="o", label="junction (additive)")
+    if ksweep:
+        ax.plot(sorted(ksweep), [ksweep[L] for L in sorted(ksweep)], color=ORANGE, marker="s",
+                label="kitchen (non-additive)")
+    ax.set_xscale("log", base=2)
+    ax.set_xticks(Ls); ax.set_xticklabels([str(L) for L in Ls])
+    ax.set_xlabel("prefix length (frames)")
+    ax.set_ylabel("irreducible floor  E[H(P*)]  (nats)")
+    ax.set_title("A longer prefix lowers the floor\n(exact, by enumeration)", loc="left")
+    ax.grid(lw=0.6); ax.set_axisbelow(True)
+    ax.legend(fontsize=7.5, loc="upper right")
+
+    panels = [(axes[1], rows, "junction  (additive evidence)")]
+    if krows:
+        panels.append((axes[2], krows, "kitchen  (non-additive evidence)"))
+    lo = min(min(r["corr_total_model"] for r in rr) for _, rr, _ in panels)
+    hi = max(max(r["corr_total_prefix"] for r in rr) for _, rr, _ in panels)
+    for ax, rr, title in panels:
+        x = np.arange(len(rr)); w = 0.36
+        ax.bar(x - w / 2, [r["corr_total_model"] for r in rr], w, color=ORANGE,
+               label="→ escalate the model")
+        ax.bar(x + w / 2, [r["corr_total_prefix"] for r in rr], w, color=BLUE,
+               label="→ extend the prefix")
+        ax.axhline(0, color=INK2, lw=1.0)
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"{r['base_L']}→{r['ext_L']}" for r in rr], fontsize=8)
+        ax.set_xlabel("prefix length, before → after")
+        ax.set_ylim(min(lo, -0.05) * 1.15, max(hi, 0.05) * 1.25)
+        ax.set_title(title, loc="left", fontsize=9)
+        ax.grid(axis="y", lw=0.6); ax.set_axisbelow(True)
+    axes[1].set_ylabel("corr(total uncertainty, gain)")
+    axes[1].legend(fontsize=7.5, loc="lower left")
+    fig.suptitle("92-97% of the gain from a longer prefix is the term that cancels from model "
+                 "escalation", x=0.005, y=1.04, ha="left", fontsize=10)
+    _save(fig, "fig5_prefix.png")
+    _table(pd.DataFrame(rows + (krows or [])), "prefix.csv")
+
+
 def main():
     print("figures:")
     made = 0
     for fn, need in ((fig_decomposition, "decomposition"), (fig_confound, "validation"),
-                     (fig_routing, "routing"), (fig_mechanisms, "mechanisms")):
+                     (fig_routing, "routing"), (fig_mechanisms, "mechanisms"),
+                     (fig_prefix, "prefix")):
         if not os.path.exists(os.path.join(RESULTS, need, "summary.json")):
             print(f"  skip {fn.__name__}: run the experiment that writes {need}/ first")
             continue

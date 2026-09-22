@@ -1,96 +1,114 @@
 # Research decision
 
-**Status: a decision is open, and it is the only thing blocking.** The instrument is built,
-validated (7/7), tested (21/21) and has produced results. What to do with them is a scope judgement.
+**Revision 2026-09-21b. The literature gate has fired and the answer changed.**
 
-## 1. Where the project actually stands
+The previous revision recommended verifying the literature before anything else, and said the
+project did not know whether its headline was a finding or a replication. It now knows: **largely a
+replication.** Three of seven claims are refuted, one is partially anticipated, and what survives is
+narrow. This document says what to do about that.
+
+## 1. Where the project stands
 
 Done and verified:
 
-- a world whose predictive distribution is exact in closed form, with two independent levers (the
-  irreducible floor `τ`, and prefix length)
-- seven closed-form baselines and a validation suite of seven checks, all passing
-- three result sets: the decomposition table, the routing sweeps, the mechanism map
+- a world whose predictive distribution is exact in closed form, two levers (irreducible floor `τ`,
+  prefix length), **23/23 tests**, **7/7 validation checks**
+- four result sets: the decomposition table, the routing sweeps, the mechanism map, the prefix arm
 - a renderer that provably cannot leak a hidden cue (682 pairs, max pixel difference exactly 0.0)
-- a VLM arm, written, wired, costed at ~$1.14 for a 40-scene pilot, and **never run**
+- **the literature verification pass**, with verdicts in `research/02_novelty_analysis.md`
 
-Not done:
+Not done, and now mostly unblocked or moot:
 
-- **no literature verification of any kind** (`research/02_novelty_analysis.md` §0)
-- no vision-language model has been called
-- the prefix-length arm is built and exact but has not been run as an experiment
+- the VLM arm is **hard-blocked**, not deferred: no `ANTHROPIC_API_KEY`, no `.env`, no `ant` CLI on
+  this machine. It is written, wired and costed at ~$1.14; it cannot run until a credential exists.
 - no real video
 
-## 2. The decision
+## 2. What the verification cost the project
 
-**Option 1 — verify the literature, then decide.** The cheapest and the only one that is not a
-gamble. Everything in `research/02_novelty_analysis.md` §4 is `[U]`. Until claims B and E are
-checked, the project does not know whether its headline is a finding or a replication, and every
-downstream choice (venue, framing, which arm to run next) depends on that. Cost: 1–2 days. **This
-is the recommendation and it is not close.**
+| claim | before | after |
+|---|---|---|
+| B — BALD ≠ forecaster error | "highest refutation risk" | **refuted**, arXiv:2606.12646 |
+| D — aleatoric cancels from escalation | "trivial algebra, but is it stated?" | **refuted**, arXiv:2605.07805 |
+| E — confidence routing inverts | "the measurement is ours" | **refuted as a phenomenon**; the below-random measurement remains |
+| F — mechanism map by deficit cause | "most likely genuine contribution" | **partially anticipated** by Peale et al.'s regime analysis on a different axis |
+| G — prefix lever | "untested" | **measured, and survives** |
 
-**Option 2 — strengthen first, verify after.** Run the two cheap arms that would most change the
-paper: the prefix-length experiment (claim G, free) and the VLM pilot on the synthetic world (~$1).
-Cost: 1–2 days. Defensible only if the literature risk is judged low, which nothing currently
-supports.
+The earlier revision's §5 named the condition that would kill the project: *"B and E both
+established, and F found to be a corollary rather than a finding."* B and E are established. F is
+not quite a corollary — Peale et al.'s axis is the correlation between the two uncertainty terms,
+ours is the cause of the weak model's deficit — but it is adjacent enough that it cannot carry a
+paper alone.
 
-**Option 3 — reframe as an uncertainty-estimation paper and drop the video framing.** The
-measurements are about estimators, not video (`research/02_novelty_analysis.md` §3). Honest, and it
-removes a framing a reviewer would fairly attack — at the cost of the one structural claim that is
-video-specific (prefix length), which has not been run and might be the strongest thing here.
+## 3. The decision
 
-**Option 4 — stop.** The instrument is reusable, the documentation is complete, the defect register
-is closed. Stopping costs nothing further and leaves a working artefact.
+**Option 1 — a short methods/negative-results note on what survives.** Three things do:
+the ρ-parameterised link from ensemble-member correlation to routing performance against a known
+truth (a regime both papers assume away — Peale et al. require multiple independent annotations,
+Young assumes independently seeded members); the mechanism map measured against an explicit
+random baseline with the floor as a controlled variable; and the prefix result. Realistic venue is a
+workshop, not a main track. Cost: 1–2 weeks. **Recommended.**
 
-## 3. Recommended sequence
+**Option 2 — pivot onto the prefix result.** Claim G is the only thing here that is specific to
+video and the only claim no paper was found to cover. The measurement is sharp: 92–97% of the
+prefix-extension gain is exactly the term that cancels from model escalation, and where evidence is
+non-additive the same confidence score correlates −0.490 with one decision and +0.059 with the
+other at every prefix length. That is a real and useful statement about video systems with two
+spend levers. The second world is now done; it would need a real anticipation dataset to be
+credible, so 4–6 weeks. **Recommended if the project
+is to continue at length.**
 
-1. **Verify claims B and E** (`research/02_novelty_analysis.md` §4, items 1–2). Half a day each.
-   Decision gate: if both are established prior work, re-headline on F (the mechanism map) or take
-   option 4.
-2. **Run the prefix-length arm.** Free, already built, and the only video-specific measurement
-   available. It is what makes this a video paper rather than an uncertainty paper, and skipping it
-   while keeping the video framing is the weakest position available.
-3. **Run the VLM pilot on the synthetic world.** ~$1.14, 40 scenes, 3 members. This is the bridge
-   the project needs: it gives a real model a true `KL(P*‖Q)`, which is impossible on real video.
-   Specifically worth measuring: does a VLM's *stated* confidence track `H(P*)`, and does an
-   ensemble of VLM calls sit near ρ=1 as predicted?
-4. **Only then** decide about real video, which is where the cost is.
+**Option 3 — stop, and keep the instrument.** It is built, validated, documented, defect-free and
+reusable, and the literature position is now recorded rather than guessed. Stopping costs nothing
+further. **Entirely defensible, and better than it sounds:** the verification pass is itself the
+deliverable that prevented weeks of work on refuted claims.
 
-## 4. What the VLM pilot would test, precisely
+**Option 4 — proceed as originally framed.** Not defensible. Claims B, D and E are taken.
 
-Three predictions the instrument makes, all falsifiable, none yet tested:
+## 4. Recommended sequence
+
+1. **Decide between options 1, 2 and 3.** This is a judgement about how much the surviving material
+   is worth, and it belongs to the user.
+3. If option 2: **add a second world** (§5) and run the prefix arm on it. One day. Every result
+   currently comes from one world, and the prefix claim is the one that most needs to be shown to
+   generalise.
+3. **The VLM arm, if a credential appears.** It is the only setting where a real model can be given
+   a true `KL(P*‖Q)`. Predictions P1–P3 below are falsifiable and cost ~$1.14.
+
+## 5. Risks, updated
+
+- **The literature risk is now retired**, which is the single biggest change. It has been paid, and
+  it cost three claims.
+- **The generality risk is now the largest.** Every result comes from one world. The mechanism sweep
+  varies the axis that matters most, but the cue structure, the linear-logit outcome model and the
+  four-outcome space are fixed. A second world costs a day and is the cheapest remaining
+  strengthening.
+- **The framing risk is resolved in one direction:** the project is not a video paper unless it
+  leads with claim G, because everything else is about estimators in general and has been claimed.
+- **What is NOT a risk:** the closed-form quantities. Enumerated, not estimated, and pinned by 23
+  tests asserting identities rather than outputs.
+
+## 6. The VLM pilot, if it ever runs
+
+Three falsifiable predictions, unchanged and still untested:
 
 - **P1.** The model's stated aleatoric uncertainty will track its own confidence rather than the
   world's `H(P*)`, as every baseline in `research/04_instrument.md` §5.1 does.
 - **P2.** An ensemble of repeated calls to one model will behave like a high-ρ ensemble: BALD near
-  zero while `KL(P*‖Q̄)` is substantial. E1 (`temperature` removed) makes this more likely, not less.
+  zero while `KL(P*‖Q̄)` is substantial. E1 — `temperature` removed from current models — makes this
+  more likely, not less.
 - **P3.** Routing on the model's confidence will correlate negatively with the true gain at high τ.
 
-P2 is the one to run first: it is the cheapest, and it is the prediction that carries the project's
-claim about real deployments.
+P2 is the one to run first: it is the cheapest, and it is the prediction that carries the surviving
+claim in §3 option 1.
 
-## 5. Risks
+## 7. If real video is eventually wanted
 
-- **The literature risk dominates everything.** Unquantified, and it is the reason for option 1.
-- **The framing risk.** A synthetic junction is not video. §3 of the novelty analysis has three
-  answers; only one is currently measurable and it has not been measured.
-- **The generality risk.** All results come from one world. The mechanism sweep varies the *cause*
-  of the cheap model's deficit, which is the axis that matters most, but the cue structure, the
-  linear-logit outcome model and the four-outcome space are fixed. A second world with a different
-  structure would cost a day and would materially strengthen the claims.
-- **What is NOT a risk:** the closed-form quantities. Those are enumerated, not estimated, and are
-  pinned by 21 tests asserting identities rather than outputs.
-
-## 6. If real video is eventually wanted
-
-`P*` does not exist there, so the exact decomposition does not transfer — that is the whole point of
-§3 in the problem formulation. What *can* transfer:
+`P*` does not exist there, so the exact decomposition does not transfer. What can:
 
 - the empirical decomposition and the routing policies, unchanged
-- the mechanism map as a **prediction**: measure whether the cheap model is overconfident and the
+- the mechanism map as a **prediction**: measure whether the cheap model is overconfident, and the
   map says whether confidence routing will invert
-- prefix length as a controlled variable, which is real on real video
+- **prefix length, which is real on real video and is the claim worth carrying over**
 
 `src/video/clip.py` defines the interface a real corpus must satisfy, with the unimplementable parts
-left as unimplemented methods rather than as an oversight. No corpus has been chosen and none should
-be before step 1.
+left as unimplemented methods rather than as an oversight. No corpus has been chosen.

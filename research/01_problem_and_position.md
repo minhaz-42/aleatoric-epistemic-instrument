@@ -109,9 +109,15 @@ is the regime an ensemble of similarly-pretrained vision-language models sits in
 ## 6. Scope, and what is not claimed
 
 - No vision-language model has been run. Not one API call has been made. The VLM arm is written,
-  wired and costed, and it is waiting on the decision in `research/03_research_decision.md`.
+  wired and costed at ~$1.14, and it is **hard-blocked**: no `ANTHROPIC_API_KEY`, no `.env` and no
+  `ant` CLI exist on this machine.
 - No real video corpus has been downloaded. `data/` is empty by design.
-- No literature verification has been performed. See `research/02_novelty_analysis.md`, which
-  states this at the top and treats it as the project's largest open risk.
+- The literature verification pass has run, and it refuted three of the project's seven claims. The
+  decomposition below is standard and is used as instrumentation, not claimed. See
+  `research/02_novelty_analysis.md` for the verdicts and the bibliography.
 - The results are about estimators in a world where the truth is known. Their bearing on real video
-  is an argument, made in §3, not a measurement.
+  is an argument, made in §3, not a measurement. The one exception is the prefix result
+  (`research/04_instrument.md` §5.4), which is about a lever real video has and image
+  classification does not.
+- Every result has been reproduced in a second, structurally different world, including one with
+  **non-additive** evidence. See `research/04_instrument.md` §6.

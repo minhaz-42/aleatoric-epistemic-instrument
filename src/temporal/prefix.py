@@ -27,7 +27,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from ..forecasting.world import Cue, World, WorldSpec
+from ..forecasting.world import Cue, Scene, World, WorldSpec, entropy
 
 # Reveal time constants in frames, ordered as the junction world's cues. Heading is apparent
 # immediately; the signal and the blocker take time to come into view.
@@ -78,3 +78,34 @@ def world_at_prefix(base: World, n_frames: int, reveal=None) -> World:
 def prefix_sweep(base: World, lengths=(1, 2, 4, 8, 16, 32), reveal=None) -> dict:
     """Expected aleatoric floor as a function of prefix length. Exact, not sampled."""
     return {int(L): world_at_prefix(base, L, reveal).expected_aleatoric() for L in lengths}
+
+
+def nested_scene(base: World, rng, scene_id: int, lengths, reveal=None) -> dict:
+    """One scene observed at several prefix lengths, with NESTED masks.
+
+    A longer prefix must reveal a superset of what a shorter one revealed -- evidence does not
+    disappear as you keep watching. Independent mask draws per length would violate that and would
+    make a prefix-extension gain occasionally negative for a reason that is an artefact of the
+    sampler rather than a property of the world.
+
+    The construction is one uniform draw `u_i` per cue, held fixed across lengths, with cue `i`
+    visible at length L iff `u_i < v_i(L)`. Because `v_i` is increasing in L, nesting is automatic
+    and no rejection is needed. The mask still depends only on L and the draw, never on `z`, so
+    equation (2) stays valid at every length.
+
+    Returns {L: Scene}, all sharing one cue vector and one outcome.
+    """
+    spec = base.spec
+    idx = [rng.choice(len(c.values), p=np.asarray(c.prior)) for c in spec.cues]
+    z = np.array([c.values[i] for c, i in zip(spec.cues, idx)], dtype=float)
+    u = rng.random(len(spec.cues))
+    y = int(rng.choice(len(spec.outcomes), p=base.conditional(z)))
+
+    out = {}
+    for L in lengths:
+        w = world_at_prefix(base, L, reveal)
+        mask = np.array([u[i] < w.spec.cues[i].visibility for i in range(len(spec.cues))])
+        post = w.posterior(z, mask)
+        out[int(L)] = (w, Scene(scene_id=scene_id, z=z, mask=mask, y=y, posterior=post,
+                                aleatoric=float(entropy(post))))
+    return out

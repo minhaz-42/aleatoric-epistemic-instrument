@@ -8,12 +8,14 @@ determine the future, or because the model cannot read the clip? Only the second
 compute on. This project builds a world where the difference is computable exactly, validates every
 estimator against it, and measures how the standard estimators fail.
 
-**Status: the instrument is built, validated and has produced results. One decision is open and it
-is the only thing blocking. Read `STATUS.md` first.**
+**Status: complete as an instrument, and the literature gate has fired. Read `STATUS.md` first.**
 
-No vision-language model has been called. No video has been downloaded. **No literature has been
-verified** — that is the project's largest open risk and `research/02_novelty_analysis.md` opens by
-saying so.
+The verification pass has now run and it changed the answer: **three of the seven claims are refuted
+by two 2026 papers**, one is partially anticipated, and what survives is narrow. That is the
+verification doing its job, and it is recorded honestly in `research/02_novelty_analysis.md`.
+
+No vision-language model has been called — that arm is hard-blocked, with no credential on this
+machine. No video has been downloaded.
 
 ## Read in this order
 
@@ -21,13 +23,13 @@ saying so.
 1. `research/01_problem_and_position.md` — the question, the formal statement, why the world must be
    synthetic, and what is not claimed.
 2. `research/04_instrument.md` — the instrument's specification and every measured number.
-3. `research/02_novelty_analysis.md` — the claims, each with an honest verification status. **Every
-   prior-art statement is currently unverified.**
-4. `research/03_research_decision.md` — the open decision and the recommended sequence.
+3. `research/02_novelty_analysis.md` — the claims and their verdicts after the verification pass.
+   **Three are refuted.** Read this before believing anything in §"The results".
+4. `research/03_research_decision.md` — the decision the verdicts force, and the recommendation.
 5. `research/05_defect_register.md` — every defect found, its evidence, and what closed it.
 6. `research/06_research_log.md` — dated log, including what was ruled out and why.
 
-## The three results
+## The results
 
 **The estimated aleatoric term is not a property of the world.** The true irreducible entropy is
 0.9897 nats for every forecaster, as it must be. The ensemble *estimate* of it swings from 0.65 to
@@ -40,25 +42,50 @@ a high one — well below routing at random. The aleatoric term cancels exactly 
 decision, but it dominates the quantity being ranked by.
 
 **Whether it inverts depends on why the cheap model is worse.** Under missing evidence the
-correlation decays but stays positive (+0.207 → +0.049). Under overconfidence it inverts at every
-floor (−0.395 → **−0.993**). And in the one configuration where the epistemic estimate is well-posed
+correlation decays but stays positive (+0.158 → +0.043). Under overconfidence it inverts at every
+floor (−0.443 → **−0.992**). And in the one configuration where the epistemic estimate is well-posed
 — ensemble members that disagree because evidence is missing — it works and is completely
-floor-invariant (**+0.570 → +0.686**) while total uncertainty is worse than random everywhere.
+floor-invariant (**+0.557 → +0.663**) while total uncertainty is worse than random everywhere.
+
+**The irreducible term cancels for model choice but carries the prefix decision.** 92–97% of the
+gain from extending the prefix is exactly the term that cancels from model escalation — in both
+worlds, at every length. Where evidence is non-additive, ranking by confidence is then actively
+wrong for the model decision (−0.490 → −0.133) while staying right for the prefix decision
+(+0.059 → +0.060). An image classifier has no second decision to serve at all.
 
 The distinction is real and actionable. The difficulty is entirely in estimating it.
+
+**All of this reproduces in a second, structurally different world** — 3 outcomes instead of 4, five
+cues instead of four, no symmetry, and **non-additive** evidence. The instrument gives 7/7 there
+too, nothing reverses sign, and two findings get sharper. See `research/04_instrument.md` §6.
+
+## What the literature check cost
+
+Claims about the estimator (BALD ≠ forecaster error) and about routing (the aleatoric term cancels;
+confidence routing underperforms) are **prior work**: arXiv:2606.12646 and arXiv:2605.07805, both
+2026. What survives is the correlated-ensemble regime both papers assume away, the mechanism map
+measured against a random baseline, and the prefix result. Full verdicts, with markers, in
+`research/02_novelty_analysis.md`.
 
 ## Reproducing
 
 System Python 3.13.5, no virtualenv, CPU only, no API key, no data files. About 90 seconds total.
 
 ```
-python3 tests/test_instrument.py          # 21/21, ~17 s
-python3 scripts/validate_instrument.py    # 7/7,   ~8 s
-python3 scripts/run_decomposition.py      # ~2 s
-python3 scripts/run_routing.py            # ~22 s
-python3 scripts/run_mechanisms.py         # ~25 s
-python3 scripts/render_examples.py        # ~18 s
-python3 scripts/make_figures.py           # ~1 s
+python3 tests/test_instrument.py                    # 23/23, ~17 s
+python3 scripts/validate_instrument.py              # 7/7,   ~8 s
+python3 scripts/run_decomposition.py                # ~2 s
+python3 scripts/run_routing.py                      # ~22 s
+python3 scripts/run_mechanisms.py                   # ~25 s
+python3 scripts/run_prefix.py                       # ~15 s
+python3 scripts/render_examples.py                  # ~18 s
+python3 scripts/make_figures.py                     # ~1 s
+python3 scripts/audit_numbers.py                    # checks every documented number
+
+# the generality check: the same experiments in a second, non-additive world
+python3 scripts/validate_instrument.py --world kitchen --tau 0.70
+python3 scripts/run_mechanisms.py --world kitchen
+python3 scripts/run_prefix.py --world kitchen --tau 0.70
 ```
 
 Results land in `experiments/results/<name>/` as a `records.csv` (one row per scored prediction) and
@@ -75,13 +102,14 @@ python3 scripts/run_vlm_pilot.py --estimate     # ~$1.14 for 40 scenes × 3 memb
 
 Literature facts carry a verification marker: `[V]` read from the paper's own text, `[A]` abstract
 read directly, `[S]` search summary only, `[U]` unverified recollection. Nothing marked `[S]` may
-enter a paper; nothing marked `[U]` may enter a paper or a plan. **Every prior-art statement in this
-project is currently `[U]`.**
+enter a paper; nothing marked `[U]` may enter a paper or a plan. The verification pass has run and
+the markers are current — see the bibliography in `research/02_novelty_analysis.md` §5.
 
 Tests assert mathematics, not current output — entropy bounded by log K, KL zero exactly at
 equality, a hidden cue unable to change a pixel — so they stay meaningful when the implementation
-changes. Two of them exist specifically because an earlier revision asserted something false, and
-they are written to fail on the wrong version.
+changes. Three of them exist specifically because an earlier revision asserted something false, and
+they are written to fail on the wrong version. All three are the same error: taking a statement that
+holds in expectation and asserting it per sample.
 
 ## Layout
 

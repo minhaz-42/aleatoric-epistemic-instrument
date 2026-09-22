@@ -86,6 +86,7 @@ class WorldSpec:
     b: np.ndarray                      # (K,)   outcome bias
     tau: float                         # temperature: the only knob on the aleatoric floor
     visibility_depends_on_scene: bool = False
+    V: Optional[np.ndarray] = None     # (K, d, d) optional pairwise cue interactions
 
     def __post_init__(self):
         K, d = len(self.outcomes), len(self.cues)
@@ -95,6 +96,8 @@ class WorldSpec:
             raise ValueError(f"b is {self.b.shape}, expected {(K,)}")
         if self.tau <= 0:
             raise ValueError(f"tau must be positive, got {self.tau}")
+        if self.V is not None and self.V.shape != (K, d, d):
+            raise ValueError(f"V is {self.V.shape}, expected {(K, d, d)}")
 
 
 @dataclass(frozen=True)
@@ -132,15 +135,28 @@ class World:
         self.state_prior = self.state_prior / self.state_prior.sum()
 
         # P(y | z) for every state, equation (1). Computed once; everything else indexes into it.
-        logits = self.states @ spec.W.T + spec.b                              # (S, K)
-        self.state_conditional = softmax(logits / spec.tau, axis=1)           # (S, K)
+        self.state_conditional = softmax(self._logits(self.states) / spec.tau, axis=1)  # (S, K)
+
+    def _logits(self, z: np.ndarray) -> np.ndarray:
+        """Outcome logits for one cue vector (d,) or a stack of them (N, d).
+
+        Additive in the cues by default. With `V` set, a pairwise interaction term z^T V_k z is
+        added per outcome, which makes the evidence NON-ADDITIVE: a pair of cues can mean something
+        neither means alone. That is the structural property the second world exists to vary, and
+        nothing in the exact inference depends on the logits being linear -- equation (2)
+        marginalises over an enumerated state table either way.
+        """
+        z = np.atleast_2d(np.asarray(z, dtype=float))
+        out = z @ self.spec.W.T + self.spec.b                                 # (N, K)
+        if self.spec.V is not None:
+            out = out + np.einsum("ni,kij,nj->nk", z, self.spec.V, z)
+        return out
 
     # -- exact inference -------------------------------------------------------------------
 
     def conditional(self, z: np.ndarray) -> np.ndarray:
         """P(y | z) for a fully specified cue vector, equation (1)."""
-        logits = (np.asarray(z, dtype=float) @ self.spec.W.T + self.spec.b) / self.spec.tau
-        return softmax(logits)
+        return softmax(self._logits(z)[0] / self.spec.tau)
 
     def posterior(self, z: np.ndarray, mask: np.ndarray) -> np.ndarray:
         """P*(y | z_m), equation (2): the Bayes-optimal forecast from a prefix.

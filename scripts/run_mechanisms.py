@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.baselines.predictors import CueDropout, LogitNoise, PartialEvidence, Tempered
 from src.evaluation.protocol import score_pair
-from src.forecasting.scenarios import junction_world
+from src.forecasting.scenarios import junction_world, kitchen_world
 from src.routing.curves import DEFAULT_BUDGETS, efficiency, gain_correlation, skill
 from src.routing.policies import standard_policies
 from src.temporal.splits import split_scenes
@@ -44,11 +44,17 @@ from src.utils.seeding import rng
 SEED = 20260921
 TAUS = (0.35, 0.70, 1.30, 2.00, 3.50)
 
+def _by_visibility(w):
+    """Cue names most-visible first, so the mechanisms are defined structurally rather than by the
+    junction world's vocabulary and the same experiment runs unchanged in any world."""
+    return [c.name for c in sorted(w.spec.cues, key=lambda c: -c.visibility)]
+
+
 MECHANISMS = {
     "missing_evidence": (
-        "cheap sees heading only; expensive also sees speed and signal",
-        lambda w: (PartialEvidence(w, ("heading",)),
-                   PartialEvidence(w, ("heading", "speed", "signal")))),
+        "cheap sees only the most-visible cue; expensive also sees the next two",
+        lambda w: (PartialEvidence(w, tuple(_by_visibility(w)[:1])),
+                   PartialEvidence(w, tuple(_by_visibility(w)[:3])))),
     "injected_noise": (
         "both read every visible cue, cheap with 3.4x the logit noise",
         lambda w: (LogitNoise(w, 1.20, rho=0.3, seed=SEED),
@@ -67,7 +73,7 @@ MECHANISMS = {
     "mixed": (
         "cheap is noisy; expensive instead has more evidence",
         lambda w: (LogitNoise(w, 1.00, rho=0.3, seed=SEED + 2),
-                   PartialEvidence(w, ("heading", "speed", "signal")))),
+                   PartialEvidence(w, tuple(_by_visibility(w)[:3])))),
 }
 
 
@@ -76,7 +82,9 @@ def main():
     ap.add_argument("--scenes", type=int, default=4000)
     ap.add_argument("--members", type=int, default=12)
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--world", default="junction", choices=["junction", "kitchen"])
     args = ap.parse_args()
+    make_world = {"junction": junction_world, "kitchen": kitchen_world}[args.world]
 
     records, summary = [], []
     print("corr(score, true gain) for each routing policy, by why the cheap forecaster is worse.")
@@ -91,14 +99,14 @@ def main():
             f"{p.name[:14]:>14}" for p in standard_policies() if p.name != "oracle_gain")
         print(head); print("  " + "-" * (len(head) - 2))
         for tau in TAUS:
-            world = junction_world(tau)
+            world = make_world(tau)
             scenes = split_scenes(world.sample_scenes(
-                rng(args.seed, "mechanisms", mech, f"tau{tau}"), args.scenes))["test"]
+                rng(args.seed, "mechanisms", args.world, mech, f"tau{tau}"), args.scenes))["test"]
             cheap, expensive = make(world)
             n = args.members if (cheap.stochastic or expensive.stochastic) else 1
             rows = score_pair(world, scenes, cheap, expensive, n_members=n)
 
-            row = {"mechanism": mech, "tau": tau, "n_members": n,
+            row = {"world": args.world, "mechanism": mech, "tau": tau, "n_members": n,
                    "expected_aleatoric": world.expected_aleatoric(),
                    "cheap": cheap.name, "expensive": expensive.name,
                    "mean_gain": float(np.mean([r["epistemic_true"]
@@ -120,8 +128,9 @@ def main():
                 if p.name != "oracle_gain"))
         print()
 
-    write_records("mechanisms", pd.DataFrame(records))
-    write_summary("mechanisms", {"seed": args.seed, "taus": list(TAUS),
+    tag = "mechanisms" if args.world == "junction" else f"mechanisms_{args.world}"
+    write_records(tag, pd.DataFrame(records))
+    write_summary(tag, {"world": args.world, "seed": args.seed, "taus": list(TAUS),
                                  "mechanisms": {k: v[0] for k, v in MECHANISMS.items()},
                                  "rows": summary})
     return 0

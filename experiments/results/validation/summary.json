@@ -1,11 +1,11 @@
 {
-  "_written": "2026-09-21T14:55:40+00:00",
+  "_written": "2026-09-22T13:20:58+00:00",
   "checks": [
     {
       "detail": {
         "max_epistemic": 0.0,
-        "mean_aleatoric": 0.9958930829424606,
-        "mean_expected_nll": 0.9958930829424606,
+        "mean_aleatoric": 0.9923023943306393,
+        "mean_expected_nll": 0.9923023943306393,
         "nll_equals_aleatoric": true
       },
       "expected": "max KL(P*||Q) = 0 exactly",
@@ -28,12 +28,12 @@
     {
       "detail": {
         "exact": 0.3838120454733769,
-        "measured": 0.37861614429074475,
-        "sem": 0.0049096566987524015
+        "measured": 0.3828096134853314,
+        "sem": 0.004886203083145565
       },
       "expected": "I(y; z_m) = 0.383812 nats (exact)",
       "id": "V3",
-      "measured": "0.378616 +/- 0.014729 (3 sem)",
+      "measured": "0.382810 +/- 0.014659 (3 sem)",
       "name": "Marginal forecaster's excess loss equals I(y; z_m)",
       "passed": true
     },
@@ -63,8 +63,8 @@
               "signal"
             ],
             "matches_closed_form": true,
-            "measured": 0.04804081647923777,
-            "sem": 0.0021308778726581764
+            "measured": 0.04736124509521425,
+            "sem": 0.0021832352592457177
           },
           {
             "exact": 0.11533074565254174,
@@ -74,8 +74,8 @@
               "speed"
             ],
             "matches_closed_form": true,
-            "measured": 0.11153626892483848,
-            "sem": 0.0028884307214030016
+            "measured": 0.11434796415159994,
+            "sem": 0.002934926608457123
           },
           {
             "exact": 0.1839021725239748,
@@ -84,16 +84,16 @@
               "heading"
             ],
             "matches_closed_form": true,
-            "measured": 0.18094976301056404,
-            "sem": 0.0036247976990201832
+            "measured": 0.18231279336016962,
+            "sem": 0.003643077313988648
           },
           {
             "exact": 0.3838120454733768,
             "forecaster": "marginal",
             "keep": [],
             "matches_closed_form": true,
-            "measured": 0.37861614429074475,
-            "sem": 0.0049096566987524015
+            "measured": 0.3828096134853314,
+            "sem": 0.004886203083145565
           }
         ]
       },
@@ -129,46 +129,46 @@
         "single_flat": true,
         "table": [
           {
-            "epistemic_hat": 0.11989636588420775,
-            "epistemic_true": 0.015040633563736087,
-            "ratio_hat_over_true": 7.971497036752855,
+            "epistemic_hat": 0.11957445867242288,
+            "epistemic_true": 0.01483733704834045,
+            "ratio_hat_over_true": 8.05902422266516,
             "rho": 0.0,
-            "single_member_kl": 0.15610402906937174
+            "single_member_kl": 0.15691189153072418
           },
           {
-            "epistemic_hat": 0.0905748325964519,
-            "epistemic_true": 0.04342906490758425,
-            "ratio_hat_over_true": 2.085580999480243,
+            "epistemic_hat": 0.09074366634057858,
+            "epistemic_true": 0.04318771744437184,
+            "ratio_hat_over_true": 2.101145226243119,
             "rho": 0.25,
-            "single_member_kl": 0.1552862321758426
+            "single_member_kl": 0.15687900159576212
           },
           {
-            "epistemic_hat": 0.061227802904718645,
-            "epistemic_true": 0.07548674181503119,
-            "ratio_hat_over_true": 0.8111067113579771,
+            "epistemic_hat": 0.061446516435649454,
+            "epistemic_true": 0.07501456002948163,
+            "ratio_hat_over_true": 0.819127865463721,
             "rho": 0.5,
-            "single_member_kl": 0.15433079165655386
+            "single_member_kl": 0.15579452353185644
           },
           {
-            "epistemic_hat": 0.0311278160714134,
-            "epistemic_true": 0.11087613108667668,
-            "ratio_hat_over_true": 0.28074406787408046,
+            "epistemic_hat": 0.03127087240001936,
+            "epistemic_true": 0.1101658997331552,
+            "ratio_hat_over_true": 0.2838525576041583,
             "rho": 0.75,
-            "single_member_kl": 0.15310826462699698
+            "single_member_kl": 0.15396407546852015
           },
           {
-            "epistemic_hat": 0.01259536280677749,
-            "epistemic_true": 0.1338204279675194,
-            "ratio_hat_over_true": 0.09412137592202746,
+            "epistemic_hat": 0.012655598509292041,
+            "epistemic_true": 0.1330160849777775,
+            "ratio_hat_over_true": 0.0951433694008237,
             "rho": 0.9,
-            "single_member_kl": 0.1519376803608785
+            "single_member_kl": 0.15214911258016217
           },
           {
-            "epistemic_hat": -3.526692826660849e-18,
-            "epistemic_true": 0.1498028546684842,
-            "ratio_hat_over_true": -2.3542227112196687e-17,
+            "epistemic_hat": 3.7470027081099033e-19,
+            "epistemic_true": 0.14911469696655694,
+            "ratio_hat_over_true": 2.512832594194435e-18,
             "rho": 1.0,
-            "single_member_kl": 0.1498028546684842
+            "single_member_kl": 0.14911469696655696
           }
         ],
         "true_monotone": true,
@@ -176,7 +176,7 @@
       },
       "expected": "single-member error flat; KL(P*||Qbar) rises monotonically; BALD falls monotonically to 0",
       "id": "V6",
-      "measured": "single 0.1561->0.1498; true 0.0150->0.1498 (10.0x); BALD 0.1199->-3.53e-18",
+      "measured": "single 0.1569->0.1491; true 0.0148->0.1491 (10.0x); BALD 0.1196->3.75e-19",
       "name": "As members correlate, the estimate and the true error move in opposite directions",
       "passed": true
     },
@@ -197,5 +197,6 @@
   "n_passed": 7,
   "n_scenes": 2000,
   "seed": 20260921,
-  "world": "junction@tau=0.9"
+  "world": "junction@tau=0.9",
+  "world_key": "junction"
 }

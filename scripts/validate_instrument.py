@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.evaluation.protocol import run_all
-from src.forecasting.scenarios import junction_world
+from src.forecasting.scenarios import junction_world, kitchen_world
 from src.utils.io import write_summary
 from src.utils.seeding import rng
 
@@ -26,10 +26,13 @@ def main():
     ap.add_argument("--scenes", type=int, default=2000)
     ap.add_argument("--tau", type=float, default=0.90)
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--world", default="junction", choices=["junction", "kitchen"],
+                    help="The checks are world-independent by construction; running them in a "
+                         "second world is how that claim is tested rather than asserted.")
     args = ap.parse_args()
 
-    world = junction_world(args.tau)
-    scenes = world.sample_scenes(rng(args.seed, "validation"), args.scenes)
+    world = {"junction": junction_world, "kitchen": kitchen_world}[args.world](args.tau)
+    scenes = world.sample_scenes(rng(args.seed, "validation", args.world), args.scenes)
 
     print(f"world   : {world.spec.name}")
     print(f"scenes  : {len(scenes)}")
@@ -44,8 +47,9 @@ def main():
     n_pass = sum(c.passed for c in checks)
     print(f"\n{n_pass}/{len(checks)} checks passed")
 
-    write_summary("validation", {
-        "world": world.spec.name, "n_scenes": len(scenes), "seed": args.seed,
+    write_summary("validation" if args.world == "junction" else f"validation_{args.world}", {
+        "world": world.spec.name, "world_key": args.world,
+        "n_scenes": len(scenes), "seed": args.seed,
         "expected_aleatoric": world.expected_aleatoric(),
         "checks": [{"id": c.id, "name": c.name, "expected": c.expected,
                     "measured": c.measured, "passed": c.passed, "detail": c.detail}

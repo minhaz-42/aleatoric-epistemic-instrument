@@ -1,0 +1,69 @@
+{
+  "_written": "2026-09-21T17:05:58+00:00",
+  "exact_floor_sweep": {
+    "1": 1.0385122339393171,
+    "16": 0.9244440603639736,
+    "2": 1.0116865782987405,
+    "32": 0.9205121486183281,
+    "4": 0.9754797189956039,
+    "8": 0.9416109315264407
+  },
+  "n_members": 12,
+  "n_scenes": 3000,
+  "rows": [
+    {
+      "base_L": 1,
+      "corr_bald_model": -0.2114367208263023,
+      "corr_bald_prefix": 0.004105505618700177,
+      "corr_total_model": -0.49029892914432543,
+      "corr_total_prefix": 0.05891152643172913,
+      "exact_floor_L": 1.0385122339393171,
+      "exact_floor_ext": 1.0116865782987405,
+      "ext_L": 2,
+      "mean_gain_model": 0.09370107186358272,
+      "mean_gain_prefix": 0.03045054071716844,
+      "mean_gain_prefix_aleatoric_part": 0.029457886920180604
+    },
+    {
+      "base_L": 2,
+      "corr_bald_model": -0.1474190239354471,
+      "corr_bald_prefix": 0.011660407869868317,
+      "corr_total_model": -0.34585076153897343,
+      "corr_total_prefix": 0.05167895881767586,
+      "exact_floor_L": 1.0116865782987405,
+      "exact_floor_ext": 0.9754797189956039,
+      "ext_L": 4,
+      "mean_gain_model": 0.0929840688433026,
+      "mean_gain_prefix": 0.04084847697733696,
+      "mean_gain_prefix_aleatoric_part": 0.038100693957155624
+    },
+    {
+      "base_L": 4,
+      "corr_bald_model": -0.09858852206539132,
+      "corr_bald_prefix": 0.05151800987515294,
+      "corr_total_model": -0.21986200087355565,
+      "corr_total_prefix": 0.08291310009471219,
+      "exact_floor_L": 0.9754797189956039,
+      "exact_floor_ext": 0.9416109315264407,
+      "ext_L": 8,
+      "mean_gain_model": 0.09070524905383828,
+      "mean_gain_prefix": 0.030621786879016843,
+      "mean_gain_prefix_aleatoric_part": 0.02937005048380999
+    },
+    {
+      "base_L": 8,
+      "corr_bald_model": -0.052277812475312484,
+      "corr_bald_prefix": 0.004254327166897243,
+      "corr_total_model": -0.13266070407341155,
+      "corr_total_prefix": 0.06010982538666123,
+      "exact_floor_L": 0.9416109315264407,
+      "exact_floor_ext": 0.9244440603639736,
+      "ext_L": 16,
+      "mean_gain_model": 0.08972801034869084,
+      "mean_gain_prefix": 0.021064429093408655,
+      "mean_gain_prefix_aleatoric_part": 0.02040523709680905
+    }
+  ],
+  "seed": 20260921,
+  "world": "kitchen@tau=0.7"
+}
