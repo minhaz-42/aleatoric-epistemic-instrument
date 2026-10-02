@@ -15,6 +15,8 @@
 \usepackage{microtype}
 \usepackage{placeins}
 \usepackage{xcolor}
+\usepackage{tikz}
+\input{pencil}
 \usepackage[colorlinks=true, allcolors=blue!55!black]{hyperref}
 
 \input{generated/numbers}
@@ -75,8 +77,24 @@ from a cheap forecaster $Q_c$ to an expensive $Q_e$ therefore changes expected l
 \label{eq:gain}
 \end{equation}
 %
-The irreducible term cancels exactly. But the total predictive entropy $H(\bar Q)$ that
+The irreducible term cancels exactly (Figure~\ref{fig:overview}). But the total predictive entropy $H(\bar Q)$ that
 confidence-based routing ranks by \emph{contains} that term, and is often dominated by it.
+
+\begin{figure}[t]
+\centering
+\input{fig_overview}
+\caption{The setting, in three parts. \textbf{(1)} In the synthetic world the latent cues $z$ have
+independent priors and a prefix reveals a subset $z_m$, so the best possible forecast
+$\Pstar(y\mid z_m)$ is an exact finite sum and every estimate can be compared with its target.
+\textbf{(2)} Expected log loss splits into $H(\Pstar)$, a property of the world and the prefix, and
+$\KL{\Pstar}{Q}$, the forecaster's share. Escalating from $Q_c$ to $Q_e$ changes only the second, so
+$H(\Pstar)$ cancels from the escalation decision. \textbf{(3)} A router sees neither term directly:
+total entropy $H(\bar Q)$ contains $H(\Pstar)$, and an ensemble's epistemic estimate depends on how
+independent its members are. As members go from independent to identical at fixed per-member error,
+the estimate falls to zero while the true error rises (Section~\ref{sec:confound}). Schematic only;
+the bar heights are illustrative.}
+\label{fig:overview}
+\end{figure}
 
 \paragraph{What is already established, and is not claimed here.}
 \citet{young2026epistemic} proves that the standard definition of epistemic uncertainty and its

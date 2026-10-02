@@ -1,0 +1,84 @@
+% Overview schematic in the shared colored-pencil style (pencil.tex), 16.4 cm wide, absolute fonts.
+% Conceptual only: no number in it is a result. Plum = irreducible H(P*), orange = the forecaster's
+% KL term, green = observed cues, blue = what the router can measure.
+\begingroup
+\def\fA{\fontsize{7.5}{9}\selectfont}%
+\def\fT{\fontsize{6}{7.2}\selectfont}%
+\def\fH{\fontsize{8}{9.6}\selectfont\bfseries}%
+\begin{tikzpicture}[x=1cm, y=1cm, font=\sffamily\fA,
+  pnote/.style={font=\sffamily\fT, text=graphite!85},
+  cueseen/.style={circle, minimum size=0.62cm, inner sep=0pt, pencil=pcGreen, crayon=pcGreen, font=\sffamily\fT},
+  cuehid/.style={circle, minimum size=0.62cm, inner sep=0pt, pencil=pcGray, densely dashed, font=\sffamily\fT, text=pcGray},
+  every node/.append style={execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},
+]
+\pgfmathsetseed{4711}
+% mini forecast: four outcome bars, heights in cm
+\newcommand{\minidist}[6]{%
+  \foreach \h [count=\k] in {#3,#4,#5,#6} {
+    \draw[pencil=#2, crayon=#2] ($(#1)+(\k*0.16-0.16,0)$) rectangle ++(0.12,\h);
+  }
+  \draw[pline=graphite!60] ($(#1)+(-0.06,0)$) -- ++(0.70,0);
+}
+
+% =============== 1. the world ===============
+\node[anchor=west, font=\sffamily\fH] at (0,5.05) {1\ \ a world where $P^*$ is exact};
+\node[pnote, anchor=west] at (0,4.62) {latent cues $z$, independent priors};
+\node[cueseen] (z1) at (0.45,3.95) {$z_1$};
+\node[cuehid]  (z2) at (1.25,3.95) {$z_2$};
+\node[cueseen] (z3) at (2.05,3.95) {$z_3$};
+\node[cuehid]  (z4) at (2.85,3.95) {$z_4$};
+\node[pnote, text=pcGreen!80!black] at (1.25,3.35) {seen in the prefix ($z_m$)};
+\node[pnote, text=pcGray] at (3.55,3.95) {hidden};
+\draw[parrow] (1.65,3.15) -- (1.65,2.55);
+\node[sbox=pcOchre, anchor=north, text width=3.1cm, align=center, text=graphite] (y) at (1.65,2.50)
+  {what happens next, $y$\\[1pt]{\fT one of four outcomes}};
+\node[anchor=west] at (0,1.20) {$P^*(y\mid z_m)=\sum_{z_h} P(z_h)\,P(y\mid z_m, z_h)$};
+\node[pnote, anchor=west, text width=4.7cm] at (0,0.62)
+  {an exact finite sum, so every estimate is checked against the quantity it claims to estimate};
+
+\draw[pline=pcGray, densely dashed] (5.15,5.2) -- (5.15,0.3);
+
+% =============== 2. the split ===============
+\node[anchor=west, font=\sffamily\fH] at (5.45,5.05) {2\ \ the loss splits exactly};
+% cheap forecaster bar
+\draw[pencil=pcPlum, crayon=pcPlum]     (5.95,1.10) rectangle (6.85,2.55);
+\draw[pencil=pcOrange, crayonx=pcOrange] (5.95,2.55) rectangle (6.85,4.15);
+% expensive forecaster bar
+\draw[pencil=pcPlum, crayon=pcPlum]     (7.55,1.10) rectangle (8.45,2.55);
+\draw[pencil=pcOrange, crayonx=pcOrange] (7.55,2.55) rectangle (8.45,3.05);
+\node[pnote] at (6.40,0.82) {cheap $Q_c$};
+\node[pnote] at (8.00,0.82) {expensive $Q_e$};
+\draw[pline=graphite!60] (5.75,1.10) -- (8.70,1.10);
+% gain bracket
+\draw[pline=pcOrange!85!black, decorate, decoration={brace, amplitude=3pt, mirror, raise=1pt}] (8.55,3.05) -- (8.55,4.15);
+\node[pnote, anchor=west, text width=1.9cm, text=pcOrange!85!black] at (8.75,3.62)
+  {escalation gain\\$\mathrm{KL}_c-\mathrm{KL}_e$};
+% legend
+\node[pnote, anchor=west, text width=1.9cm, text=pcOrange!85!black] at (8.75,2.80) {$\mathrm{KL}(P^*\|Q)$: the forecaster's};
+\node[pnote, anchor=west, text width=1.9cm, text=pcPlum] at (8.75,1.82) {$H(P^*)$: the world's; it cancels};
+\node[anchor=west] at (5.45,0.38) {$\mathbb{E}\,[-\log Q]=H(P^*)+\mathrm{KL}(P^*\|Q)$};
+
+\draw[pline=pcGray, densely dashed] (10.85,5.2) -- (10.85,0.3);
+
+% =============== 3. what a router can measure ===============
+\node[anchor=west, font=\sffamily\fH] at (11.15,5.05) {3\ \ what a router can measure};
+\node[pnote, anchor=north west, text width=4.95cm] at (11.15,4.78)
+  {total entropy $H(\bar Q)$ contains $H(P^*)$; the ensemble's epistemic estimate depends on
+   member independence};
+% independent members
+\node[pnote, anchor=west] at (11.15,3.66) {independent members, $\rho=0$};
+\minidist{11.25,2.75}{pcBlue}{0.55}{0.20}{0.15}{0.30}
+\minidist{12.10,2.75}{pcBlue}{0.15}{0.60}{0.25}{0.20}
+\minidist{12.95,2.75}{pcBlue}{0.30}{0.25}{0.50}{0.10}
+\node[pnote, anchor=west, text width=1.75cm] at (13.75,3.05) {disagree: the estimate sees the error};
+% correlated members
+\node[pnote, anchor=west] at (11.15,2.28) {correlated members, $\rho\to 1$};
+\minidist{11.25,1.30}{pcBlue}{0.62}{0.12}{0.10}{0.20}
+\minidist{12.10,1.30}{pcBlue}{0.62}{0.12}{0.10}{0.20}
+\minidist{12.95,1.30}{pcBlue}{0.62}{0.12}{0.10}{0.20}
+\node[pnote, anchor=west, text width=1.75cm] at (13.75,1.60) {agree: the estimate falls to zero, the error does not};
+\draw[marker=pcBlue] (11.20,0.50) -- (16.12,0.50);
+\node[anchor=west, font=\sffamily\fT\bfseries, text=pcBlue!75!black] at (11.20,0.50)
+  {as $\rho$ rises, the estimate and the error move apart};
+\end{tikzpicture}%
+\endgroup

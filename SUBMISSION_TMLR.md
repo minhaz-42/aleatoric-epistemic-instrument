@@ -14,6 +14,9 @@
 - Anonymous: "Anonymous authors / Paper under double-blind review"; no names, emails, repository URL
   or acknowledgements in the PDF text. All pages checked visually.
 - No result was recomputed; every number still comes from `paper/generated/` as committed.
+- New Figure 1 (`paper/fig_overview.tex`): a colored-pencil schematic of the setting (world, exact
+  loss split, what a router can measure). It is conceptual, carries no result numbers, and builds
+  from `paper/pencil.tex`. Rebuilt 2026-10-02: 10 pages, 0 overfull, 0 undefined.
 
 ## Form fields
 - **Title:** Uncertainty-Aware Routing Needs an Ensemble You Do Not Have

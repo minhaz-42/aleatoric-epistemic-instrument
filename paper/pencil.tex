@@ -1,0 +1,42 @@
+% pencil.tex: shared "colored-pencil sketch" TikZ styles for diagrams (not for data plots).
+% Outlines are graphite strokes drawn twice with independent jitter; fills are a light wash under
+% diagonal colored-pencil hatching; arrows are hand-drawn with clean tips. A fixed seed per
+% figure (\pgfmathsetseed) keeps every build identical.
+\usetikzlibrary{decorations.pathmorphing,decorations.pathreplacing,patterns.meta,calc,arrows.meta,positioning}
+\definecolor{graphite}{HTML}{3A3A3A}
+\definecolor{pcBlue}{HTML}{2F6DB5}
+\definecolor{pcOrange}{HTML}{D9622B}
+\definecolor{pcGreen}{HTML}{4F8A5B}
+\definecolor{pcOchre}{HTML}{D4A02E}
+\definecolor{pcPlum}{HTML}{7D4E8C}
+\definecolor{pcRed}{HTML}{B8323A}
+\definecolor{pcGray}{HTML}{8A8A8A}
+\colorlet{pcGrayL}{pcGray!65}
+\tikzset{
+  sketch/.style={decorate, decoration={random steps, segment length=2.4pt, amplitude=0.30pt}},
+  % graphite outline: a firm stroke plus a lighter, looser second pass
+  pencil/.style={draw=#1, line width=0.55pt, line cap=round, line join=round, sketch,
+    preaction={draw=#1!50, line width=0.32pt, line cap=round, decorate,
+               decoration={random steps, segment length=3.2pt, amplitude=0.55pt}}},
+  pencil/.default=graphite,
+  % colored-pencil fill: soft wash + diagonal hatching
+  crayon/.style={preaction={fill=#1!8},
+    preaction={pattern={Lines[angle=40,distance=2.4pt,line width=0.22pt]}, pattern color=#1!32}},
+  crayonx/.style={preaction={fill=#1!12},
+    preaction={pattern={Lines[angle=40,distance=2.1pt,line width=0.26pt]}, pattern color=#1!40},
+    preaction={pattern={Lines[angle=-50,distance=3.0pt,line width=0.2pt]}, pattern color=#1!30}},
+  sbox/.style={pencil=#1, crayon=#1, inner xsep=5pt, inner ysep=3.6pt},
+  sboxg/.style={pencil=graphite, crayon=#1, inner xsep=4pt, inner ysep=3pt},
+  % hand-drawn arrow, straight tip
+  parrow/.style={draw=#1, line width=0.65pt, line cap=round,
+    -{Stealth[length=5.2pt,width=4.2pt,round]},
+    decorate, decoration={random steps, segment length=3.6pt, amplitude=0.38pt,
+                          pre length=1pt, post length=5pt}},
+  parrow/.default=graphite,
+  pline/.style={draw=#1, line width=0.55pt, line cap=round, sketch},
+  pline/.default=graphite,
+  % highlighter swash drawn under a label
+  marker/.style={draw=#1, line width=7pt, opacity=0.28, line cap=round,
+    decorate, decoration={random steps, segment length=6pt, amplitude=0.6pt}},
+  pnote/.style={font=\sffamily\tiny, text=graphite!80},
+}
