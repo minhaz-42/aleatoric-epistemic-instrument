@@ -6,8 +6,8 @@
 % paper/generated/numbers.tex, and every table body is a file in paper/generated/, all written by
 % scripts/make_paper_tables.py from experiments/results/*/summary.json. scripts/audit_paper.py
 % regenerates them and fails if anything drifted or if a numeral was typed into the prose.
-\documentclass{article}
-\usepackage{neuripsish}          % replace with the venue's own style file to submit; see the .sty
+\documentclass[10pt]{article}
+\usepackage{tmlr}                % official TMLR style (github.com/JmlrOrg/tmlr-style-file); add [accepted] for camera-ready
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb}
 \usepackage{booktabs}
@@ -15,7 +15,6 @@
 \usepackage{microtype}
 \usepackage{placeins}
 \usepackage{xcolor}
-\usepackage[numbers, sort&compress]{natbib}
 \usepackage[colorlinks=true, allcolors=blue!55!black]{hyperref}
 
 \input{generated/numbers}
@@ -24,7 +23,7 @@
 \newcommand{\KL}[2]{\mathrm{KL}(#1\,\|\,#2)}
 
 \title{Uncertainty-Aware Routing Needs an Ensemble You Do Not Have}
-\author{Anonymous submission}
+\author{\name Anonymous authors}
 % Non-anonymous form: replace the line above with the author block the venue asks for.
 
 \begin{document}
@@ -354,7 +353,7 @@ calibration, which is diagnosable in advance; and video's second lever is made a
 the term that cancels from the first, so one score cannot serve both.
 
 \small
-\bibliographystyle{plainnat}
+\bibliographystyle{tmlr}
 \bibliography{refs}
 
 \normalsize

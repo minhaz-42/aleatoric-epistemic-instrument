@@ -1,5 +1,7 @@
 # PROJECT STATUS AND RESUME GUIDE
 
+> **2026-10-02: retargeted to TMLR** (AISTATS 2027 abstract deadline had passed). `paper/main.tex` now uses the official TMLR style; builds clean, 10 pages. Ready to submit: see `SUBMISSION_TMLR.md`.
+
 **COMPLETE as of 2026-09-22. Nothing is running, nothing is half-written, no defect is open.**
 **Read this file, then `paper/main.pdf`, then `research/02_novelty_analysis.md`.**
 

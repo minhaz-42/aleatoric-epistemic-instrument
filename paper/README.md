@@ -36,16 +36,11 @@ regenerates into a temporary directory and diffs, and it reads `main.tex` and fa
 numeral that is not a declared experimental *setting* (a temperature, a correlation, a prefix
 length). Both halves are verified to fail on purpose.
 
-## Format, and the one thing to change before submitting
+## Format
 
-`neuripsish.sty` reproduces the NeurIPS layout — 10pt Times on a 5.5 × 9 inch block — because the
-official style file is not redistributable and was not on the build machine. **It is not the
-official file.** To submit, drop the venue's own `.sty` into this directory and change one line in
-`main.tex`:
-
-```latex
-\usepackage{neuripsish}        ->    \usepackage{neurips_2026}
-```
+The paper uses the **official TMLR style** (`tmlr.sty`, `tmlr.bst`, `fancyhdr.sty` from
+github.com/JmlrOrg/tmlr-style-file), in anonymous submission mode. For the camera-ready, change
+`\usepackage{tmlr}` to `\usepackage[accepted]{tmlr}` and fill in the author block.
 
 Nothing else in `main.tex` depends on it. `\author{Anonymous submission}` is the anonymous form;
 replace it with whatever block the venue asks for.
@@ -68,7 +63,7 @@ and are kept because the research documents reference them.
 ```
 main.tex              the paper. No typed numerals; one \usepackage line to swap for submission
 refs.bib              12 references, every one read from its own arXiv record
-neuripsish.sty        unofficial NeurIPS-like layout, replaced at submission time
+tmlr.sty, tmlr.bst    official TMLR style (anonymous submission mode)
 generated/            numbers.tex and every table body, written from experiments/results/
 figures/              written by scripts/make_figures.py
 main.pdf              the built paper
